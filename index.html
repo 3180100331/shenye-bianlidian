@@ -1,0 +1,2000 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>深夜便利店</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  background:#04070d;color:#dfe8f5;overflow:hidden;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;
+  background:#0a0f1a;position:relative}
+#titleScreen{position:absolute;inset:0;display:none;flex-direction:column;
+  align-items:center;justify-content:center;padding:32px 24px;z-index:40;
+  background:radial-gradient(ellipse at 50% 28%,rgba(255,190,110,.10),transparent 60%),
+             linear-gradient(180deg,#05090f,#0a1220 60%,#0e1626)}
+#titleScreen.on{display:flex;animation:fadein .5s}
+.t-title{font-size:26px;font-weight:600;letter-spacing:5px;color:#ffd08a;margin-bottom:6px;text-align:center}
+.t-sub{font-size:12px;color:#6d80a0;letter-spacing:3px;margin-bottom:44px}
+.t-btn{width:100%;max-width:260px;background:#131d30;border:1px solid #2f4066;
+  border-radius:9px;padding:15px;font-size:14px;color:#dfe8f5;font-family:inherit;
+  cursor:pointer;margin-bottom:11px;transition:.15s;letter-spacing:1px}
+.t-btn:active{background:#1e2c48;transform:scale(.98)}
+.t-btn.primary{background:linear-gradient(135deg,#3a2a18,#5a3d1f);color:#ffd08a;
+  border-color:#6b4a24;font-weight:600}
+.t-hint{font-size:11px;color:#4a5a72;margin-top:16px;text-align:center;line-height:1.7}
+#hud{flex:none;background:#070c16;border-bottom:1px solid #16213a;padding:8px 12px;
+  font-size:11.5px;color:#7f8fa8;line-height:1.8}
+#hud .row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+#hud .sep{color:#1d2a44}
+#hud b{color:#ffd08a;font-weight:600}
+#scene{flex:1;overflow-y:auto;padding:12px 13px 8px;
+  background:linear-gradient(180deg,#070c16,#0d1524 60%,#111a2b)}
+#dayTitle{font-size:13px;color:#8fa3bd;letter-spacing:1px;margin-bottom:2px}
+#dayTitle b{color:#ffd08a;font-size:17px;font-weight:600;margin:0 3px}
+#meta{font-size:11.5px;color:#5f728c;margin-bottom:10px;line-height:1.7}
+#eventBanner{margin-bottom:10px}
+#guestArea{display:flex;flex-direction:column;gap:9px;margin-bottom:12px}
+.guest{background:#0e1728;border:1px solid #1d2c48;border-radius:9px;padding:11px 12px;
+  animation:gin .45s ease both}
+@keyframes gin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.g-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
+.avatar{width:36px;height:36px;border-radius:50%;flex:none;display:flex;
+  align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0a0f1a}
+.g-name{font-size:14px;font-weight:600;color:#f0f5ff}
+.g-title{font-size:10.5px;color:#5f728c;margin-top:1px}
+.g-favor{margin-left:auto;text-align:right;flex:none}
+.g-tier{font-size:11px}
+.g-num{font-size:10px;color:#5f728c}
+.g-bar{height:4px;background:#131d30;border-radius:2px;overflow:hidden;margin:6px 0 6px}
+.g-bar i{display:block;height:100%;width:0;transition:width .5s}
+.g-hint{font-size:10.5px;color:#7d8ca3;padding:5px 7px;background:#0a1220;
+  border-radius:5px;margin-bottom:7px;line-height:1.5}
+.g-rain{font-size:10.5px;color:#8fa8d0;padding:5px 7px;background:#0d1a2e;
+  border-radius:5px;margin-bottom:7px;line-height:1.5;border-left:2px solid #3a5070}
+.g-btns{display:flex;gap:7px}
+.btn{flex:1;border:none;border-radius:7px;padding:9px 0;font-size:12.5px;
+  font-family:inherit;cursor:pointer;transition:.15s;font-weight:500}
+.btn-spec{background:#1e2c48;color:#ffd08a;border:1px solid #2f4066}
+.btn-spec:active{background:#2a3a5c}
+.btn-gen{background:#131d30;color:#9fb2cc;border:1px solid #1d2c48}
+.btn-gen:active{background:#1a253c}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+#actions{flex:none;padding:9px 13px 13px;background:#070c16;border-top:1px solid #16213a;
+  display:flex;gap:8px}
+#actions .btn{flex:1;padding:13px 0;font-size:13px}
+/* 出现「门口」按钮时变 2×2，避免四个按钮挤成一排 */
+#actions.four{flex-wrap:wrap}
+#actions.four .btn{flex:1 1 calc(50% - 4px)}
+.btn-door{background:#1a1a2e;color:#b89fe8;border:1px solid #3a3050}
+.btn-door:active{background:#252540}
+.btn-buy{background:#16233a;color:#a8c4e8;border:1px solid #24344f}
+.btn-buy:active{background:#1d2c48}
+.btn-tidy{background:#16233a;color:#9fd8b8;border:1px solid #24344f}
+.btn-tidy:active{background:#1d2c48}
+.btn-close{background:linear-gradient(135deg,#3a2a18,#5a3d1f);color:#ffd08a;
+  border:1px solid #6b4a24;font-weight:600}
+.btn-close:active{filter:brightness(1.2)}
+#logBox{margin-top:4px}
+.log{font-size:11.5px;color:#6d80a0;line-height:1.7;padding:2px 0 2px 8px;
+  border-left:2px solid #1d2c48;margin-bottom:3px;animation:fin .4s}
+@keyframes fin{from{opacity:0}to{opacity:1}}
+.log.up{color:#8fd6a8;border-color:#2a5a3e}
+.log.down{color:#e88f9a;border-color:#5a2a33}
+.log.gold{color:#ffd08a;border-color:#6b4a24}
+#modal{position:absolute;inset:0;background:rgba(3,6,12,.88);backdrop-filter:blur(4px);
+  display:none;align-items:center;justify-content:center;padding:20px;z-index:50}
+#modal.on{display:flex;animation:fadein .25s}
+@keyframes fadein{from{opacity:0}to{opacity:1}}
+.modal-box{width:100%;max-width:400px;background:#0d1626;border:1px solid #24344f;
+  border-radius:12px;padding:18px 16px;max-height:82%;overflow-y:auto;
+  animation:pop .3s cubic-bezier(.2,.8,.3,1)}
+@keyframes pop{from{transform:scale(.94);opacity:0}to{transform:none;opacity:1}}
+.m-title{font-size:15px;font-weight:600;color:#ffd08a;margin-bottom:6px}
+.m-scene{font-size:12.5px;color:#8fa3bd;line-height:1.7;margin-bottom:14px;
+  padding-left:9px;border-left:2px solid #2f4066}
+.opt{width:100%;text-align:left;background:#131d30;border:1px solid #1d2c48;
+  border-radius:8px;padding:12px 13px;font-size:12.5px;color:#c6d4e6;
+  font-family:inherit;cursor:pointer;margin-bottom:7px;transition:.15s;line-height:1.5}
+.opt:active{background:#1e2c48;border-color:#3a4d70}
+.m-res{font-size:12.5px;line-height:1.8;color:#9fb2cc;margin-bottom:14px}
+.m-res .g{color:#8fd6a8}.m-res .r{color:#e88f9a}.m-res .y{color:#ffd08a}
+.m-btn{width:100%;background:#1e2c48;border:1px solid #3a4d70;border-radius:8px;
+  padding:12px;font-size:13px;color:#ffd08a;font-family:inherit;cursor:pointer;font-weight:600}
+.m-btn:active{background:#2a3a5c}
+.settle-title{font-size:14px;color:#ffd08a;font-weight:600;margin:14px 0 8px}
+.settle-title:first-child{margin-top:0}
+.settle-row{display:flex;justify-content:space-between;font-size:12.5px;
+  padding:7px 0;border-bottom:1px solid #16213a;color:#8fa3bd}
+.settle-row b{color:#f0f5ff;font-weight:600}
+.settle-row .ok{color:#8fd6a8}
+.settle-row .no{color:#e88f9a}
+.notice{margin-top:12px;padding:9px 11px;border-radius:7px;font-size:12px;
+  background:#1a1010;border:1px solid #5a2a33;color:#e88f9a;line-height:1.6}
+.notice.gold{background:#1a140a;border-color:#6b4a24;color:#ffd08a}
+.notice.blue{background:#0d1a2e;border-color:#24344f;color:#9fb2cc}
+.end-box{text-align:center}
+.end-label{font-size:11px;letter-spacing:3px;color:#6d80a0;margin-bottom:8px}
+.end-name{font-size:20px;font-weight:600;color:#ffd08a;margin-bottom:4px}
+.end-char{font-size:12px;color:#8fa3bd;margin-bottom:16px}
+.end-text{font-size:13px;line-height:2;color:#c6d4e6;text-align:left;
+  padding:14px;background:#0a1220;border-radius:9px;border:1px solid #1d2c48;margin-bottom:14px}
+.end-after{margin-top:14px;padding:13px;background:#0d1119;border-radius:9px;
+  border:1px dashed #2a3448;text-align:left}
+.end-after .t{font-size:11px;color:#6d80a0;margin-bottom:6px;letter-spacing:2px}
+.end-after .x{font-size:12px;color:#7d8ca3;line-height:1.8}
+.end-actions{display:flex;gap:8px;margin-top:16px}
+.end-actions .m-btn{flex:1;margin:0}
+.col-section{margin-bottom:16px}
+.col-sec-title{font-size:12px;color:#ffd08a;letter-spacing:2px;font-weight:600;
+  margin-bottom:8px;padding-left:7px;border-left:2px solid #6b4a24}
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.col-item{background:#0a1220;border:1px solid #1d2c48;border-radius:7px;
+  padding:9px 7px;text-align:center;min-height:62px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  transition:.2s}
+.col-item.locked{opacity:.35}
+.col-item.unlocked{border-color:#3a4d70}
+.col-item.is-new{border-color:#ffd08a;box-shadow:0 0 0 1px rgba(255,208,138,.4),
+  inset 0 0 16px rgba(255,208,138,.1);animation:newglow 2s ease-in-out infinite}
+@keyframes newglow{0%,100%{box-shadow:0 0 0 1px rgba(255,208,138,.4),inset 0 0 16px rgba(255,208,138,.1)}
+  50%{box-shadow:0 0 0 1px rgba(255,208,138,.8),inset 0 0 20px rgba(255,208,138,.2)}}
+.col-icon{font-size:17px;margin-bottom:4px;line-height:1}
+.col-name{font-size:10px;color:#c6d4e6;line-height:1.3}
+.col-item.locked .col-name{color:#4a5a72}
+.col-tip{font-size:9px;color:#5f728c;margin-top:2px;line-height:1.3}
+.col-item.is-new .col-tip{color:#ffd08a}
+.col-count{font-size:11px;color:#6d80a0;text-align:right;margin-bottom:10px}
+.col-newhint{font-size:10.5px;color:#ffd08a;margin-bottom:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="titleScreen">
+    <div class="t-title">深 夜 便 利 店</div>
+    <div class="t-sub">A NIGHT SHIFT</div>
+    <button class="t-btn primary" id="btnStart">开始新的一天</button>
+    <button class="t-btn" id="btnCollection">回 忆 册</button>
+    <div class="t-hint" id="tHint"></div>
+  </div>
+  <header id="hud"></header>
+  <main id="scene">
+    <div id="dayTitle"></div>
+    <div id="meta"></div>
+    <div id="eventBanner"></div>
+    <div id="guestArea"></div>
+    <div id="logBox"></div>
+  </main>
+  <footer id="actions"></footer>
+  <div id="modal"><div class="modal-box" id="modalBox"></div></div>
+</div>
+
+<script>
+/* =====================================================
+   《深夜便利店》· 设计备忘
+   =====================================================
+   ① aNights 不能降。
+   ② HIT（对话命中率）是最大变量，不是好感数值。
+   ③ S_GAIN_PCT 12 是「平价」——best / mid / worst 同价。
+      营收 = 服务量；好感 = 服务质量。
+   ④ 天气不碰营收。
+   ⑤ 营收公式：
+        BASE 60 + M_GAIN 8×补货 + S_GAIN 12×专属
+      + G_GAIN 4×通用 + REC_GAIN 8×推荐 + 醉客（强硬4/安抚2）
+      合格线 100 · A 线 105 · 停电夜合格线 80
+   ⑥ TIDY_DECAY 9：30 夜消耗 270，整理 13~14 次 ×18 = 234~252，
+      初始可掉 35 → 终值 69~87，刚好压线。
+      A 夜：HIT=0.8 实测 9.6（正好卡住 aNights 9），HIT=1 实测 14.9
+      （每题都中，A 自然多）。8 太松（A 16.5），10 偏松（A 13.3）。
+   ⑦ 整理夜是「合格夜」，不是「不合格夜」：
+      1 整理 + 2 专属 = 60 + 24 + 16 = 100，正好压合格线。
+      整理吃的是 A 级夜，不是合格。算 tidy 账时不能把整理夜从合格池里扣掉。
+   ⑧ 店长检查失败不扣明晚 AP：4AP 夜最高 96 拿不到 100，
+      AP−1 等于白送 2 次失败计数。只罚当晚营收/口碑/服务。
+   ⑨ 恋人率按档位看，不按单一数字看：60–75% 只是 HIT=0.9 的带。
+      HIT=1 完美玩家 ~100% 是奖励；HIT=0.8「完全不看提示」下限 ~65%
+      也是合理下限，不是失衡——真实玩家有熟悉度微亮，实际 HIT 在 0.85+，
+      体验高于这个下限。「HIT=0.8 必须 20–30%」已撤回：那要把 aNights
+      抬到 11（32%），变成卡数值而不是卡理解。淡淡的遗憾来自余波与林屿线的错过。
+   ⑩ stockFactor 必须在 calcRevenuePct 里乘，不能只在面板里乘：
+      显示和实际必须同一套公式（曾经面板写 ×0.85、calcRevenue 没乘）。已修，不许回退。
+   ⑪ 林川 appearRate 0.65 是叙事值，不是调参：急诊科主治医师「几乎每日必到」，
+      0.6 偏低。它同时是林屿线的入口，实测把林屿解锁抬到 15–19%（原 11%）。
+   ⑫ 「中位」类指标也要先问档位：苏妄好感中位 HIT=1 → 73（落在 65–72 带内），
+      HIT=0.8 → 51。所有中位/比率指标先问「这是给哪档玩家的」再定数。
+      （这是第三次跨档定错目标，前两次：恋人带 60–75%、A 夜 9.9。）
+   ⑬ 苏妄 appearRate 停在 0.55，不上 0.65：0.65 与林川同档，会抹掉
+      「无固定规律、失眠或卡文才出现」的不确定感。完美玩家恋人 43.5%
+      不是没解决，是这条线该有的难度——「选对了还是打不出来」
+      正是他想让玩家体会的：不是不心动，是不敢。
+   ⑭ 林屿线是「探索流」，不是「事件流」。玩家先注意到门口有人（层 0），
+      再见到但不可攻略（层 1），老照片后正式可攻略（层 2），
+      三次互动后坦白（层 3）。不设「林川好感 75」门槛：
+      入口是「注意到他」，不是「攻略他弟弟」。
+   ⑮ yuState 状态机（1 的旧语义「阶段 A 已触发」已废弃，checkYuStageA 已删）：
+      0 = 未出现（点「去门口看看」累积 yuLookCount，满 3 次进 1）
+      1 = 已见到但不可攻略（每晚 45% 出现，买热牛奶，不能互动）
+      2 = 可攻略，互动 0 次（老照片已看；3 的计数器见 yuState）
+      3 = 可攻略，互动 1 次
+      4 = 可攻略，互动 2 次
+      5 = 可攻略，互动 3 次，下次打烊坦白
+      6 = 已坦白，正式解锁（每晚被动 +1）
+      分寸：打烊轮选对 +1（免费） / 「看向门口」选对 +2（0AP，叠加不替代） /
+      坦白 +4 / 解锁后每晚 +1。门槛 YU_SCORE_LOVER = 19、YU_SCORE_FRIEND = 16，
+      另加显式条件 yuActCount ≥ 2 且只拦恋人（见 ⑳㉑㉒）。
+      老照片是 1 → 2 的唯一钥匙，不是好感门槛。
+   ⑯ 层 0「去门口看看」不消耗 AP：它是叙事入口，不是资源取舍。
+      「一晚一件事」的取舍发生在补货/整理/互动/看向门口，
+      不发生在「注意到门口有个人」。实测 3AP 代价曾让陆则衍恋人 −12.7pt。
+      代价改为「每晚限 1 次」（yuLookTonight 复用），查看满 3 次 = 3 个晚上。
+   ⑰ 林屿好友率目标 18–25%，不是 30–45%：
+      好友率高意味着「错过」不痛，违背隐藏线的调性。
+      林屿是「大多数人没注意到」的线，不是「人人能拿好友」的线。
+      （好友 ≈ 解锁 − 恋人：解锁 35–40%、恋人 10–15% → 好友 20–25%）
+   ⑱ （已作废，保留作过程记录）原设 YU_SCORE_LOVER = 16，想让全被动够不到。
+      实测不成立：全被动尾到 19 分（早解锁局还有 12–14 晚 ×+1），
+      且被动与主动最多只差 3 次 ×2 = 6 分。任何能让主动落到 10–15% 的
+      分数门槛，都会把被动一起带进来。改用 ⑳ 的显式条件 + ㉑ 的有效门槛。
+   ⑲ 林屿线的取舍是「注意力」不是「资源」：
+      层 0「去门口看看」、层 2「看向门口」，都是 0AP。
+      1AP 会让它变成「拿关店换分寸」，实测主动 3 次关门率 54.1%。
+      注意力分配不能有资源代价，否则玩家先出局，根本没到结算。
+   ⑳ 「全被动 0%」用显式条件，不用分数门槛：
+      被动与主动分数差最多 6 分，任何让主动到 10–15% 的门槛都会把被动带进来。
+      yuActCount >= 2 是布尔条件，不参与分数计算（在 finalYuEnding 里先行判定）。
+   ㉑ 门槛 13 是数学 bug：层 2→5 确定性分值 = 打烊 3 + 主动 6 + 坦白 4 = 13，
+      13 等于保底值，等于没门槛（实测解锁者 90%+ 是恋人）。
+      恋人 19 / 好友 16 才是有效门槛。
+   ㉒ 显式条件 yuActCount 只拦恋人，不拦好友：
+      全被动 = 「你一直没主动注意过他」，他搬走，但你们认识——够好友。
+      好友是「认识」，恋人是「主动」。全被动天花板 = yu_friend。
+   ㉓ 模拟器 DOM stub 的 innerHTML 不清 _q、readyModal 不看 .on，
+      会导致同一夜 doSettlement 跑两次（64% 局命中）。
+      上一轮「主动 3 次关门 54%」是假象，真值 1.1%。
+      教训：模拟器 bug 会伪装成设计结论，报「结构性问题」前先验 harness。
+   ㉔ 老照片窗口定为 [12,19]（砍掉 [12,22] 的尾部 3 天），林川门槛保持 35：
+      照片率 39.9% ≈ 林屿解锁 38.6%，同时把林川从 49% 压到 40.7%、陆则衍 68.3 → 67.2。
+      一个改动解决两件事。窗口可以收窄，但不能太晚：
+      [12,21]+40 的照片率 36.3% 同样达标，但解锁日推到 22.6、分寸只剩 5.39，
+      林屿恋人崩到 3.5%——照片率达标不等于林屿线达标，解锁时间点同样关键。
+   ㉕ 林川恋人 40% 来自稀有事件的频率，不是老照片：
+      把照片的 +15 砍到 +8，恋人 52.2%（没降）；照片完全不发生，恋人 50.6%（也没降）。
+      稀有事件同时给 +15 好感和一段心事，所以「好感≥80」与「心事=3」两条线一起涨
+      （实测 66.8% / 67.0%，几乎重合）。
+      要压林川只能动「稀有事件给林川的心事」或 LOVER_GATE，动照片是无效的。
+      这条以后别再试。
+   ㉖ 林川恋人目标 30% 撤回，改为 35–45%：
+      30% 是 harness 有 bug 时定的。修复后四角色梯度
+      陆则衍 67% > 林川 41% > 苏妄 13% > 陈术 11%，
+      这个梯度比「全在 30% 附近」更有区分度。
+   ㉗ 0AP 查看的 11pt 全局降价接受，不加代价：
+      改回 1AP 掉到 57.1%，加「查看当晚不能补货」会推翻 ⑲ 的语义。
+      注意力分配不能有资源代价，11pt 是给「关注门口的人」的礼物，不是 bug。
+   ===================================================== */
+
+const TOTAL_DAYS  = 30;
+const BASE_PCT    = 60;
+const M_GAIN_PCT  = 8;
+const S_GAIN_PCT  = 12;
+const G_GAIN_PCT  = 4;
+const REC_GAIN_PCT= 8;
+const PASS_PCT    = 100;
+const BLACKOUT_PASS_PCT = 80;
+const A_PCT       = 105;
+
+const TIDY_DECAY  = 9;
+const TIDY_MANAGE = 18;
+const TIDY_BLACKOUT = 6;
+const TIDY_TARGET = 65;
+
+const STOCK_INIT    = 100;
+const STOCK_DECAY   = 25;
+const STOCK_RESTOCK = 50;
+const STOCK_FULL    = 100;
+
+const FAIL_LIMIT  = 4;
+const FAIL_WARN   = 3;
+
+const LOVER_GATE  = { favor:80, hearts:3, qualified:18, aNights:9 };
+const FRIEND_GATE = { favor:50, qualified:15 };
+const AFTERGLOW   = 75;
+const FAMILIAR_FAVOR = 56;
+
+const YU_REP_GATE   = 75;
+const YU_SVC_GATE   = 70;
+const YU_QUALIFIED  = 15;
+const YU_LIN_HEART  = 2;
+const YU_SCORE_LOVER = 19;
+const YU_SCORE_FRIEND = 16;
+const YU_GATE = 7;
+
+/* 林屿探索流：层 0（查看次数）→ 层 1（见到不可攻略）→ 层 2（可攻略）→ 层 3（坦白） */
+const YU_LOOK_GATE   = 3;     // 查看次数门槛
+const YU_APPEAR_RATE = 0.45;  // 层 1 每晚出现率
+const YU_ACT_GATE    = 2;     // 恋人结局的显式条件：主动「看向门口」至少 2 次
+const YU_HINT_RATE   = 0.30;  // 层 0 暗示出现概率（第 6 天起）
+
+const DRUNK_HARD_BONUS = 4;
+const DRUNK_SOFT_BONUS = 2;
+
+const SAVE_KEY       = 'deepnight.save.v8';
+const COLLECTION_KEY = 'deepnight.collection.v1';
+
+function revenueTarget(day){
+  if(day<=10) return 1000;
+  if(day<=20) return 1500;
+  return 2000;
+}
+function stockFactor(){
+  if(S.stock >= 50) return 1.0;
+  if(S.stock >= 25) return 0.85;
+  if(S.stock > 0)   return 0.7;
+  return 0.5;
+}
+
+const COL_DATA = {
+  chars: [
+    { id:'lu', name:'陆则衍', icon:'☕',
+      hearts:['半秒的「谢谢」','被否掉的方案','图纸上的那条街'],
+      rare:'压在收银台下的草图',
+      endings:{ lover:'画在正中央的灯', friend:'背面的谢谢', gone:'再没人点冰美式' } },
+    { id:'chen', name:'陈术', icon:'🔧',
+      hearts:['修好的卷帘门','两个徒弟','左臂的疤'],
+      rare:'免费检修的冷柜',
+      endings:{ lover:'二十米外的驿站', friend:'换掉的全店电路', gone:'搬走的旧车' } },
+    { id:'su', name:'苏妄', icon:'📓',
+      hearts:['撕下来没给你的字','街区的旧案','写进书里的人'],
+      rare:'扉页上空的「致」',
+      endings:{ lover:'每本书的彩蛋', friend:'签售会第一本', gone:'窗边空着的座位' } },
+    { id:'lin', name:'林川', icon:'🩺',
+      hearts:['靠着货架缓过来','口袋里的旧照片','很久没等过谁'],
+      rare:'终于说完的旧事',
+      endings:{ lover:'两杯热美式', friend:'不再聊哥哥', gone:'两份三明治' } }
+  ],
+  yu: { name:'林屿', icon:'🌙',
+    hearts:['关了灯才走','「我以为他会恨我」','「把店交给你，我放心了」'],
+    endings:{ lover:'夜间维修工作室', friend:'门口的灯', gone:'再没人站着' } },
+  events: [
+    { id:'drunk',   name:'醉客闹店', icon:'🍺' },
+    { id:'blackout',name:'深夜停电', icon:'🔌' },
+    { id:'storm',   name:'暴雨封路', icon:'🌧' },
+    { id:'inspect', name:'店长检查', icon:'📋' }
+  ]
+};
+
+const CHARS = {
+  lu:{ id:'lu', name:'陆则衍', title:'建筑设计院主创', diff:'easy', color:'#7fb8e8',
+       firstDay:1, appearRate:0.8,
+       hintEarly:'话很少，总是低头看手机。',
+       hintClose:'他喜欢等别人先开口。',
+       special:[
+         {s:'进门后，他径直走向咖啡台，盯着菜单有些犹豫。',o:[
+           {t:'把冰美式推过去：「老样子？」',r:'best'},
+           {t:'微笑着问「今天喝点什么？」',r:'mid'},
+           {t:'不说话，等他开口点单',r:'worst'}]},
+         {s:'他坐在吧台椅上揉了揉眉心，屏幕上是第三版被驳回的稿子。',o:[
+           {t:'安静递过去一颗薄荷糖',r:'best'},
+           {t:'问「项目还顺利吗？」',r:'mid'},
+           {t:'凑过去看他的屏幕',r:'worst'}]},
+         {s:'他站在热气腾腾的关东煮前，犹豫了很久。',o:[
+           {t:'「今天换换口味？」',r:'mid'},
+           {t:'「关东煮刚煮好，要不要试试？」',r:'best'},
+           {t:'「还是老样子，金枪鱼饭团？」',r:'worst'}]},
+         {s:'凌晨两点，他靠在吧台椅上闭眼小憩，电脑还停在建模界面，屏幕光映着他微微憔悴的面容。',o:[
+           {t:'轻轻给他放上一杯热牛奶',r:'best'},
+           {t:'安静不打扰，默默将空调温度打高',r:'mid'},
+           {t:'出声提醒「您好，我们吧台这边不能靠着睡觉哦。」',r:'worst'}]},
+         {s:'他结完账转身正要走，一张手绘建筑线稿从他文件夹里飘出来落在地上。',o:[
+           {t:'捡起来递给他，视线不往图纸内容上落。',r:'best'},
+           {t:'捡起来递给他「你的图纸掉啦，看着画得好精细。」',r:'mid'},
+           {t:'远远喊住他「哎，你东西掉地上了。」',r:'worst'}]}
+       ],
+       general:[
+         {s:'他低头盯着手机屏幕站在吧台前，指尖没点屏幕，像是在斟酌怎么开口，又像是在等你先说话。',o:[
+           {t:'顺手把冰美式放到台边，声音放得很轻「今天也辛苦了。」',r:'best'},
+           {t:'抬手拿起扫码枪，安静等他报商品，全程不多搭话。',r:'mid'},
+           {t:'抬高声音扬起语调「欢迎光临！请问需要点什么？」',r:'worst'}]},
+         {s:'他停在店门口的檐下，没掀帘子，也没走，就站在阴影里看着街对面。',o:[
+           {t:'抬手把门口的檐灯调亮了一度，没出声招呼，低头继续理手里的货。',r:'best'},
+           {t:'抬眼扫了他一下，没上前，安安静静等着他自己进来。',r:'mid'},
+           {t:'出去问他买不买',r:'worst'}]},
+         {s:'凌晨三点他接了个电话，声音压得很低，带着藏不住的不耐，挂掉后靠在吧台边闭了闭眼。',o:[
+           {t:'放了一颗薄荷糖在他杯边，没问电话里的事。',r:'best'},
+           {t:'轻声叹口气「甲方又要改方案啊？」',r:'mid'},
+           {t:'凑过去好奇追问「谁啊？又给你找事了？」',r:'worst'}]}
+       ],
+       hearts:[
+         '他第一次主动说了句「谢谢」，比平时多停了半秒。',
+         '他指尖划过平板上的老街线稿，说甲方要拆了做网红商业街，声音压得很低，像怕惊扰了画里的烟火。',
+         '他把折叠的手绘稿推到你面前半寸，又飞快收回去一点「等项目落地，我带你走一遍我画过的每一条巷。」'
+       ],
+       heartEvents:[
+         {s:'他站在柜台前道了谢，却没走，手指轻轻敲着吧台边缘。',
+          o:[{t:'低头继续理货，轻声回「不客气，累了就多歇会儿。」',r:'best'},
+             {t:'抬头看他一眼「是项目上又遇到问题了？」',r:'mid'}]},
+         {s:'他说起被全盘否决的老街改造方案，指尖在桌面上无意识地画着线条。',
+          o:[{t:'安静等他说完，接一句「有时候事情没法顺着我们想要的进行，问心无愧就可以了。」',r:'best'},
+             {t:'顺着他的话附和「甲方总这样，改来改去的也折腾人。」',r:'mid'}]},
+         {s:'他把手绘图纸折好塞回包里，顿了顿，又拿了出来。',
+          o:[{t:'抬眼笑了笑「是画了新稿子吗？我能看看吗？」',r:'best'},
+             {t:'看了眼墙上的钟「不早了，快回去休息吧。」',r:'mid'}]}
+       ],
+       rare:'凌晨三点他走后，你在收银台边角发现一张压着的手绘稿 —— 是你的便利店，夜色里亮着暖黄色的灯光，门外的有两排梧桐，缓缓飘落的黄叶落在街道上，没有署名。',
+       endings:{
+         lover:'老城区改造方案最终版公示那天，他把图纸摊在你吧台上，指尖点在最中心的位置 —— 你的便利店亮着暖灯，<br><br>周围是完整保留下来的老巷与梧桐。<br><br>「我想留住这条街上的烟火气」，他抬眼看你，晨光落在眼镜上泛着光，<br><br>「也想留住这条街上的某个人。」<br><br>天蒙蒙亮，他第一次没有赶在日出前离开。',
+         friend:'项目落地那天，他寄来一张实景明信片，背面是工整的钢笔字<br><br>「谢了，那杯总冰得刚好的美式。」<br><br>你们没再见过面，但那张明信片，你一直夹在收银台的账本里。',
+         gone:'他接了外地的项目，走得悄无声息。<br><br>凌晨一点的吧台前，再也没有穿白衬衫的人等冰美式。<br><br>你偶尔还是会多做一杯，放到天亮，再默默倒掉。'
+       }},
+  chen:{ id:'chen', name:'陈术', title:'夜间汽修店老板', diff:'easy', color:'#e8a87f',
+       firstDay:3, appearRate:0.6,
+       hintEarly:'话不多，手上总有油。',
+       hintClose:'他吃软不吃硬。',
+       special:[
+         {s:'店里冷柜突然不制冷，你正手足无措，他刚好进来买水，便帮忙修起了压缩机，工具摊了一地。',o:[
+           {t:'蹲在旁边帮忙递扳手等工具',r:'best'},
+           {t:'又惊又喜「你还会修这个啊？太谢谢你了。」',r:'mid'},
+           {t:'犹豫着往后撤「要不还是叫专业维修？」',r:'worst'}]},
+         {s:'凌晨四点，他点着烟准备进店，又想起什么似的掐了。',o:[
+           {t:'把功能饮料递过去「又这么晚下班，里面坐会？」',r:'best'},
+           {t:'微笑着打招呼「今天单子多吗？外面冷，进来坐会」',r:'mid'},
+           {t:'公事公办提醒「店里不能抽烟。」',r:'worst'}]},
+         {s:'他刚处理完深夜事故车进店，工装裤沾着泥点，手背上蹭了油污。',o:[
+           {t:'递过纸巾「刚忙完啊？先擦个手吧。」',r:'mid'},
+           {t:'直接把冰好的功能饮料放在收银台前，再递过去一叠擦手湿巾「先擦手，喝的还是老样子？」',r:'best'},
+           {t:'皱眉扫了一眼他的衣服「你衣服该洗了，别靠货架太近。」',r:'worst'}]},
+         {s:'带两个徒弟来买夜宵，徒弟吵着要吃零食，他嘴上凶「赚俩钱就乱造」，手已经往口袋摸钱包。',o:[
+           {t:'顺手拿两包卤蛋搁过去「给小孩加个餐，算我请的。」',r:'best'},
+           {t:'笑着搭话「你徒弟挺活泼的，今天要点什么？」',r:'mid'},
+           {t:'「一共二十八，请问怎么支付？扫码还是现金？」',r:'worst'}]},
+         {s:'深秋凌晨，他拎着半袋火腿肠进店，径直走向热水机，想给巷口流浪猫盛一碗温水，怕猫吃凉的闹肚子。',o:[
+           {t:'帮忙装好猫粮，顺手拿两个一次性纸碗搁在旁边「用这个盛，凉得慢。」',r:'best'},
+           {t:'笑着搭话「又去喂小猫啊？它们都快认你当主人了。」',r:'mid'},
+           {t:'皱眉提醒「你别在我这弄啊，撒地上还得打扫。」',r:'worst'}]}
+       ],
+       general:[
+         {s:'他靠在零食货架边，眼神落在窗外的巷口，工装外套搭在臂弯，半天没动地方。',o:[
+           {t:'把冰好的饮料搁在他手边的货架上「站累了就多靠会儿，不急。」',r:'best'},
+           {t:'等他拿好东西过来，正常扫码结账，没追问他在看什么。',r:'mid'},
+           {t:'扫了眼他沾着机油印的袖子「你衣服该洗了」',r:'worst'}]},
+         {s:'他付完钱拎着东西，却没转身走，就站在吧台前，像是有话要说又咽了回去。',o:[
+           {t:'微笑着指了指窗边的空座「没事就坐会儿再走，反正也没客人。」',r:'best'},
+           {t:'把找零递给他，安静等着，看他是不是还有别的事。',r:'mid'},
+           {t:'低头自顾自盘点货品，全当没看见他站着。',r:'worst'}]},
+         {s:'外面落着冷雨，他推门进来时肩线沾了湿意，指尖攥着半湿的伞柄。',o:[
+           {t:'抽了几张纸巾递给他「擦擦吧，别着凉了。」',r:'best'},
+           {t:'微笑看着他，等他开口。',r:'mid'},
+           {t:'忙着理货，视线没在他身上多停留。',r:'worst'}]}
+       ],
+       hearts:[
+         '他修好卡住的卷帘门，在工装裤上蹭了蹭满手油污，丢下两个字「小事」，转身就往门外走。',
+         '他靠在门框上抽烟，说起两个徒弟笨手笨脚总闯祸，骂得凶，嘴角却不自觉松了一点弧度。',
+         '他抬胳膊够货架上的物品，袖口滑下，左臂的旧疤露了出来，他立刻放下手臂，半天没说话。'
+       ],
+       heartEvents:[
+         {s:'卷帘门修好了。他甩了甩手腕，拎起工具包就要走。',
+          o:[{t:'递过干净湿巾「谢了，先擦擦手吧。」',r:'best'},
+             {t:'连忙掏出手机「多少钱啊，我转给你。」',r:'mid'}]},
+         {s:'他说起那两个徒弟，语气不耐烦，但没停下。',
+          o:[{t:'笑着接一句「嘴上嫌麻烦，心里比谁都护着他们。」',r:'best'},
+             {t:'好奇问「他们俩怎么没继续上学啊？」',r:'mid'}]},
+         {s:'他卷起袖子拿货架高处的东西，左臂那道疤露出来，又飞快地放下袖子。',
+          o:[{t:'什么都不说，递过去一罐饮料',r:'best'},
+             {t:'忍不住问「你胳膊上的疤，是以前修车弄的？」',r:'mid'}]}
+       ],
+       rare:'他趁你在后仓理货，把店里冷柜、电路、卷帘门全检修了一遍，换了老化的零件。你问多少钱，他叼着烟摆手「顺手的事。」',
+       endings:{
+         lover:'汽修铺扩成的车友驿站挂了新招牌，离你的店只有二十米。<br><br>他每天凌晨收工都先拐进来，拎一瓶冰好的功能饮料，靠在窗边等你打烊。<br><br>问他怎么天天来，他扯了扯嘴角丢出两个字「顺路。」<br><br>你从没戳破，这条路根本不顺路。',
+         friend:'他帮你把店里的电路全换了新的，临走丢下一句「坏了喊我」。<br><br>他还是常来买饮料，话依旧少。只是每次走之前，都会扫一眼店门口的监控，确认没问题才转身。',
+         gone:'汽修铺转租了，门口再也没停过那辆旧越野。<br><br>深夜听到引擎声，你还是会下意识抬头。<br><br>帘子掀开，进来的永远是陌生人。'
+       }},
+  su:{ id:'su', name:'苏妄', title:'悬疑推理作家', diff:'hard', color:'#b89fe8',
+       firstDay:5, appearRate:0.55,
+       hintEarly:'帽檐压得很低。',
+       hintClose:'别打扰他，就是最好的照顾。',
+       special:[
+         {s:'他把帽檐压得更低，本子摊开在窗边。',o:[
+           {t:'把他旁边的灯调暗一点，走开',r:'best'},
+           {t:'远远点了个头',r:'mid'},
+           {t:'问「在写什么」',r:'worst'}]},
+         {s:'凌晨三点店里只剩他一个客人，突然抬头看向你，嘴唇动了动又没出声。',o:[
+           {t:'走过去站在桌边，安静等他开口。',r:'best'},
+           {t:'笑着问「怎么了？需要什么吗？」',r:'mid'},
+           {t:'疑惑回看「啊？你说话啊，我听着呢。」',r:'worst'}]},
+         {s:'他在货架间来回走，什么也没拿。',o:[
+           {t:'「需要帮忙吗？」',r:'worst'},
+           {t:'假装没看见',r:'best'},
+           {t:'走过去整理旁边的货',r:'mid'}]},
+         {s:'他坐在靠窗位置写东西，笔尖停在本子上很久，手指无意识揪着连帽衫抽绳。',o:[
+           {t:'轻放一杯温水在桌边，没出声。',r:'best'},
+           {t:'走过去轻声问「卡文了吗？要不要换杯热的？」',r:'mid'},
+           {t:'凑过去低头看本子「你在写什么呀？小说吗？」',r:'worst'}]},
+         {s:'突然下起了雨，他站在店门侧边躲雨，抬头望向远处。',o:[
+           {t:'拿出店里闲置的伞放在他手边「拿去用吧，不用急着还。」',r:'best'},
+           {t:'递过纸巾「雨挺大的，进来等会吧？」',r:'mid'},
+           {t:'大声说「别站门口挡着人了。」',r:'worst'}]}
+       ],
+       general:[
+         {s:'他掀帘子进来时几乎没出声，脚步放得很轻，下意识往最角落的位置瞟。',o:[
+           {t:'瞥见他的身影，悄悄按开了靠窗角落的台灯，没抬头搭话。',r:'best'},
+           {t:'等他拿好商品走到台前，才轻声扫码结账。',r:'mid'},
+           {t:'抬头笑着打招呼「好久不见」',r:'worst'}]},
+         {s:'他站在零食货架前站了很久，指尖碰了碰包装又收回去，什么都没拿。',o:[
+           {t:'低头擦着吧台，余光留意着动静，全程不凑上前打扰。',r:'best'},
+           {t:'走过去整理旁边货架的货品，和他保持半步距离，不主动搭话。',r:'mid'},
+           {t:'走上前凑过去问「需要帮忙吗」',r:'worst'}]},
+         {s:'他靠在窗边的充电座旁，手机连着充电线，屏幕反复亮着未接来电的提示。',o:[
+           {t:'倒了杯温水，轻轻放在他手边。',r:'best'},
+           {t:'推着补货车从旁走过，脚步放得很轻。',r:'mid'},
+           {t:'凑过去瞟了眼屏幕「谁啊，打这么多遍你都不接？」',r:'worst'}]}
+       ],
+       hearts:[
+         '他在便签本上飞快写了一行字，撕下来折了两折塞进卫衣口袋，全程没抬眼看你。',
+         '他说起这片街区很多年前的案子，语速比平时快了半拍，帽檐下的眼睛亮得像碎在夜里的星。',
+         '他指尖摩挲着笔记本封皮，声音轻得像叹气「如果把一个人写进故事里，她会觉得被打扰吗？」'
+       ],
+       heartEvents:[
+         {s:'他在便签本上写了一句，撕下来折好，慢慢塞回口袋。',
+          o:[{t:'低头整理货架，当作没留意他的动作。',r:'best'},
+             {t:'抬头随口问「写的是什么？」',r:'mid'}]},
+         {s:'他说起这片街区多年前的旧案，语速比平时快了很多，手都微微发颤。',
+          o:[{t:'撑着吧台认真听「然后呢？后来查到什么了？」',r:'best'},
+             {t:'歪头问「你怎么对这个旧案子这么上心啊？」',r:'mid'}]},
+         {s:'他合上本子看着你，帽檐下的眼睛很亮，带着一点无措的试探。',
+          o:[{t:'轻声说「只要是带着心意写的，就不会是打扰。」',r:'best'},
+             {t:'眼睛亮了亮「是要写我吗？我能看看吗？」',r:'mid'}]}
+       ],
+       rare:'他带了刚印好的样书给你，扉页上写了半个“致”字，后面空着。他攥着书脊递给你，没敢抬头，但你看见了他微红的耳尖。',
+       endings:{
+         lover:'他的每本小说里，都藏着一家亮着灯的深夜便利店。<br><br>第五本出版时，读者终于扒出了这个贯穿所有系列的彩蛋。<br><br>采访里记者问原型是谁，他对着镜头顿了顿<br><br>「是我在深夜遇到的，一盏不会灭的灯。」',
+         friend:'新书签售会借了你的店门口办，他把第一本签好的书递给你。<br><br>扉页上的「致」字后面，写着「致深夜的灯」。<br><br>你笑着收下，知道这是他能给出的，最郑重的谢意。',
+         gone:'他搬去了别的城市，靠窗的位置再也没人坐一下午。<br><br>收拾货架时你翻出半本他落下的便签，最后一页只有一行字<br><br>「有些故事，停在深夜就好。」'
+       }},
+  lin:{ id:'lin', name:'林川', title:'急诊科主治医师', diff:'medium', color:'#8fe8c4',
+       firstDay:2, appearRate:0.65,
+       hintEarly:'总是很累的样子。',
+       hintClose:'他习惯照顾别人，不习惯被照顾。',
+       special:[
+         {s:'他夜班结束进来，白大褂还没换，眼底青黑很重。',o:[
+           {t:'提前把热美式和黑巧克力放好「刚下班吧，巧克力给你放这边了。」',r:'best'},
+           {t:'关心道「今天夜班很忙吗？看着好累的样子。」',r:'mid'},
+           {t:'抬头公式化问「您好，要点什么？」',r:'worst'}]},
+         {s:'他买了润喉糖，听起来声音有点哑。',o:[
+           {t:'递过去一杯温水',r:'best'},
+           {t:'正常结账',r:'mid'},
+           {t:'「医生也会生病啊」',r:'worst'}]},
+         {s:'聊起失联的哥哥，他语气顿了一下，眼神看向窗外，沉默了几秒。',o:[
+           {t:'自然转移话题「对了，今天新到了全麦三明治，要不要试试？」',r:'best'},
+           {t:'轻声安慰「别担心，肯定会找到的。」',r:'mid'},
+           {t:'追问「你哥为什么失联啊？到底发生什么事了？」',r:'worst'}]},
+         {s:'有顾客突然低血糖晕倒，他刚进店放下东西就立刻上前施救，动作利落沉稳。',o:[
+           {t:'等他处理完，递上温水和消毒湿巾「辛苦了，先歇会。」',r:'best'},
+           {t:'满眼佩服「你也太厉害了吧，还好有你在。」',r:'mid'},
+           {t:'凑过去追问「他没事吧？你真是医生啊？」',r:'worst'}]},
+         {s:'他难得休夜班，穿了休闲便装进来，比平时放松很多。',o:[
+           {t:'路过时随口说「今天不用上班啊？那款你经常买的黑巧补货了。」',r:'best'},
+           {t:'笑着打招呼「今天休息呀？难得看你不穿白大褂。」',r:'mid'},
+           {t:'惊讶道「你不穿白大褂我都差点认不出来了。」',r:'worst'}]}
+       ],
+       general:[
+         {s:'他的目光在关东煮锅上停了几秒，又抬腕看了眼手表，像是在纠结要不要吃。',o:[
+           {t:'掀开锅盖温声说「萝卜刚炖入味，给你留了一串。」',r:'best'},
+           {t:'站在吧台后等他做决定，不催也不搭话。',r:'mid'},
+           {t:'皱了下眉「这么晚还吃这个？」',r:'worst'}]},
+         {s:'他付完钱没立刻走，站在店里出神，眉头轻轻皱着，像是在想什么棘手的事。',o:[
+           {t:'抬手把店里的背景音乐调小了两格，没上前打断他。',r:'best'},
+           {t:'慢悠悠整理着前台的糖果盒，不打扰他的思绪。',r:'mid'},
+           {t:'凑过去好奇问他是不是有心事',r:'worst'}]},
+         {s:'他站在零食架前，抬手又放下，反复两三次，始终没拿定主意选哪个。',o:[
+           {t:'递过去他常买的那款黑巧「快卖完了，特地给你留着的。」',r:'best'},
+           {t:'推着补货车从旁经过，没停下搭话，只安静整理货品。',r:'mid'},
+           {t:'给他推销各种新零食',r:'worst'}]}
+       ],
+       hearts:[
+         '他下夜班扶着吧台站了会儿，闭着眼缓神，白大褂的肩线还带着深夜的凉气。',
+         '一张旧照片从他的口袋里滑出来，轻轻落在地上，你瞥了一眼，是两张年轻的开朗笑着的脸。',
+         '他望着窗外泛白的天光，声音很轻很轻「我在这座城市等了五年，都快忘了等的是什么了。」'
+       ],
+       heartEvents:[
+         {s:'他靠着货架站了一会儿，闭着眼，眉头轻轻皱着。',
+          o:[{t:'搬过吧台椅轻轻放在他身边「坐会儿吧，不急。」',r:'best'},
+             {t:'轻声问「今天急诊很忙吗？」',r:'mid'}]},
+         {s:'一张旧照片从他的口袋里滑出来，落在地上，你瞥了一眼，是两张年轻的脸。',
+          o:[{t:'不说话，只是帮忙捡起照片',r:'best'},
+             {t:'捡起来好奇问「这是你和谁呀？看着好小的时候。」',r:'mid'}]},
+         {s:'他看着窗外，很久才说一句：「我已经很久没等过谁了。」',
+          o:[{t:'轻声接「那现在呢，还在等吗？」',r:'best'},
+             {t:'下意识问「等谁？」',r:'mid'}]}
+       ],
+       rare:'他坐了整整四十分钟，把哥哥失联的前因后果全说完了。杯子里的美式泛着微苦，他最后说「我从没跟别人说过这些。」',
+       endings:{
+         lover:'林屿攥着牛奶瓶指尖发白，林川看着他，红了眼眶却没掉眼泪。<br><br>你递过去两杯热美式，轻轻退到一边。<br><br>那天店里的灯亮到日出，两个失散五年的人，终于坐回了同一张桌子旁。<br><br>后来他把排班表贴在你收银台旁，标注好每一个能来见你的夜晚。',
+         friend:'他还是常来，只是不再聊哥哥的事。<br><br>下夜班的时候，他会多坐一会儿，喝完那杯热美式，才走。<br><br>你知道，有些事他还在等。',
+         gone:'他调去了外地的医院。最后一晚，买了两份三明治。<br><br>「一份路上吃。」他说。「另一份……万一遇到谁。」<br><br>你看着他走进晨光里，终究没问出口那另一份是给谁的。'
+       }}
+};
+const CHAR_IDS = Object.keys(CHARS);
+const RARE_WINDOWS = { lu:[8,13], chen:[11,16], lin:[12,19], su:[18,24] };
+const HEART_THRESHOLDS = [40, 60, 75];
+
+function favorGain(diff, type, rank){
+  if(type==='special'){
+    if(rank==='best') return 2;
+    /* hard（苏妄）：专属是「读懂了」的时刻，mid/worst 都不倒扣；
+       他的难在搭话——抗拒闲聊，说错就合上本子（见下面的 general 分支）。 */
+    if(diff==='hard') return 0;
+    return rank==='mid'?1:0;
+  }else{
+    if(diff==='hard') return rank==='best'?1:rank==='mid'?0:-1;
+    return rank==='best'?1:0;
+  }
+}
+function tierOf(f){
+  if(f>=80) return '心动';
+  if(f>=56) return '在意';
+  if(f>=36) return '熟客';
+  if(f>=16) return '眼熟';
+  return '陌生';
+}
+function tierColor(f){
+  if(f>=80) return '#ff8fa3';
+  if(f>=56) return '#ffb36b';
+  if(f>=36) return '#8fd6a8';
+  return '#7f8fa8';
+}
+function getCharHint(id){
+  const c = CHARS[id];
+  return S.favors[id] >= 36 ? c.hintClose : c.hintEarly;
+}
+
+const S = {};
+function initState(){
+  S.day = 1;
+  S.tidy = 100;
+  S.stock = STOCK_INIT;
+  S.rep = 65;
+  S.service = 60;
+  S.favors = {}; S.hearts = {}; S.rareDone = {}; S.rarePity = {};
+  S.lastSeen = {}; S.dialogIdx = {}; S.heartQueue = {};
+  S.present = [];
+  S.night = { manage:0, special:0, general:0, rec:0 };
+  S.week  = { rec:0, general:0 };
+  S.qualified = 0;
+  S.aNights = 0;
+  S.failStreak = 0;
+  S.logs = [];
+  S.nightHistory = [];
+  S.weather = 'clear';
+  S.blackout = false;
+  S.storm = false;
+  S.drunk = false;
+  S.drunkHandled = false;
+  S.drunkBonus = 0;
+  S.drunkSuccess = false;
+  S.inspectResult = null;
+  S.pendingApPenalty = 0;
+  S.pendingSettle = false;
+  S.apMax = 5;
+  S.ap = 5;
+  S.yuState = 0;
+  S.yuScore = 0;
+  S.yuCorrect = 0;
+  S.yuHearts = 0;
+  S.yuHeartQueue = [];
+  S.yuLookCount = 0;        // 查看门口次数（层 0 累积，0–3+）
+  S.yuSeen = 0;             // 层 1 已出现次数（0–3，用于三段文案递进）
+  S.yuLookTonight = false;  // 当晚是否已点过「去门口看看」/「看向门口」
+  S.yuActCount = 0;         // 主动「看向门口」累计次数（恋人结局显式条件）
+  S.yuHintTonight = false;  // 当晚是否播层 0 暗示横幅（每晚只掷一次）
+  S.pendingPhoto = false;
+  S.photoDone = false;
+  S.yuInNight = false;
+  S.yuShown = false;
+  S.newUnlocks = { hearts:{}, rare:{}, endings:{}, events:{}, yuHearts:{} };
+  CHAR_IDS.forEach(id=>{
+    S.favors[id]=0; S.hearts[id]=0; S.rareDone[id]=false;
+    S.rarePity[id]=0; S.lastSeen[id]=0;
+    S.dialogIdx[id] = { special:0, general:0 };
+    S.heartQueue[id] = [];
+  });
+}
+
+let COL = {};
+function loadCollection(){
+  try {
+    const raw = localStorage.getItem(COLLECTION_KEY);
+    COL = raw ? JSON.parse(raw) : {};
+  } catch(e){ COL = {}; }
+  if(!COL.hearts) COL.hearts = {};
+  if(!COL.rare) COL.rare = {};
+  if(!COL.endings) COL.endings = {};
+  if(!COL.events) COL.events = {};
+  if(!COL.yuHearts) COL.yuHearts = {};
+}
+function saveCollection(){
+  try { localStorage.setItem(COLLECTION_KEY, JSON.stringify(COL)); } catch(e){}
+}
+function markNew(kind, key){
+  if(!S.newUnlocks) return;
+  if(kind === 'yuHearts'){ S.newUnlocks.yuHearts[key] = true; return; }
+  if(!S.newUnlocks[kind]) S.newUnlocks[kind] = {};
+  S.newUnlocks[kind][key] = true;
+}
+function recordHeart(id, idx){
+  if(!COL.hearts[id]) COL.hearts[id] = {};
+  const isNew = !COL.hearts[id][idx];
+  COL.hearts[id][idx] = true; saveCollection();
+  if(isNew) markNew('hearts', id+'_'+idx);
+}
+function recordRare(id){
+  const isNew = !COL.rare[id];
+  COL.rare[id] = true; saveCollection();
+  if(isNew) markNew('rare', id);
+}
+function recordEvent(k){
+  const isNew = !COL.events[k];
+  COL.events[k] = true; saveCollection();
+  if(isNew) markNew('events', k);
+}
+function recordYuHeart(idx){
+  const isNew = !COL.yuHearts[idx];
+  COL.yuHearts[idx] = true; saveCollection();
+  if(isNew) markNew('yuHearts', idx);
+}
+function recordEnding(type, charId){
+  const key = charId ? type+'_'+charId : type;
+  const isNew = !COL.endings[key];
+  COL.endings[key] = true; saveCollection();
+  // 只有会出现在回忆册里的结局才标「新」；closed / none 无对应格子
+  if(isNew && (charId || type.indexOf('yu_') === 0)) markNew('endings', key);
+}
+
+function collectionStats(){
+  let total=0, got=0;
+  COL_DATA.chars.forEach(c=>{
+    c.hearts.forEach((_,i)=>{ total++; if(COL.hearts[c.id] && COL.hearts[c.id][i]) got++; });
+    total++; if(COL.rare[c.id]) got++;
+    Object.keys(c.endings).forEach(k=>{ total++; if(COL.endings[k+'_'+c.id]) got++; });
+  });
+  COL_DATA.yu.hearts.forEach((_,i)=>{ total++; if(COL.yuHearts[i]) got++; });
+  Object.keys(COL_DATA.yu.endings).forEach(k=>{ total++; if(COL.endings['yu_'+k]) got++; });
+  COL_DATA.events.forEach(e=>{ total++; if(COL.events[e.id]) got++; });
+  return { total, got };
+}
+
+function renderCollection(showNew){
+  const box = $('#modalBox');
+  const nu = showNew ? (S.newUnlocks || {hearts:{},rare:{},endings:{},events:{},yuHearts:{}}) : null;
+  const cls = (base, isNew) => base + (isNew ? ' is-new' : '');
+  let html = `<div class="m-title">回 忆 册</div>`;
+  const st = collectionStats();
+  html += `<div class="col-count">已收集 ${st.got} / ${st.total}</div>`;
+  if(nu){
+    const newCount = Object.keys(nu.hearts).length + Object.keys(nu.rare).length
+      + Object.keys(nu.endings).length + Object.keys(nu.events).length
+      + Object.keys(nu.yuHearts).length;
+    if(newCount > 0) html += `<div class="col-newhint">✦ 新解锁 ${newCount} 格</div>`;
+  }
+
+  COL_DATA.chars.forEach(c=>{
+    html += `<div class="col-section"><div class="col-sec-title">${c.name}</div><div class="col-grid">`;
+    c.hearts.forEach((name,i)=>{
+      const ok = COL.hearts[c.id] && COL.hearts[c.id][i];
+      const isNew = nu && nu.hearts[c.id+'_'+i];
+      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+        <div class="col-icon">${ok?'💭':'❔'}</div>
+        <div class="col-name">${ok?name:'？？？'}</div>
+        <div class="col-tip">心事 ${i+1}${isNew?' · 新':''}</div>
+      </div>`;
+    });
+    const rareOk = COL.rare[c.id];
+    const rareNew = nu && nu.rare[c.id];
+    html += `<div class="${cls('col-item '+(rareOk?'unlocked':'locked'), rareNew)}">
+      <div class="col-icon">${rareOk?'🎁':'❔'}</div>
+      <div class="col-name">${rareOk?c.rare:'？？？'}</div>
+      <div class="col-tip">稀有${rareNew?' · 新':''}</div>
+    </div>`;
+    Object.keys(c.endings).forEach(k=>{
+      const key = k+'_'+c.id;
+      const ok = COL.endings[key];
+      const isNew = nu && nu.endings[key];
+      const label = k==='lover'?'恋人':k==='friend'?'好友':'错过';
+      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+        <div class="col-icon">${ok?(k==='lover'?'💗':k==='friend'?'🤝':'🍂'):'❔'}</div>
+        <div class="col-name">${ok?c.endings[k]:'？？？'}</div>
+        <div class="col-tip">结局·${label}${isNew?' · 新':''}</div>
+      </div>`;
+    });
+    html += `</div></div>`;
+  });
+
+  html += `<div class="col-section"><div class="col-sec-title">${COL_DATA.yu.name}（隐藏）</div><div class="col-grid">`;
+  COL_DATA.yu.hearts.forEach((name,i)=>{
+    const ok = COL.yuHearts[i];
+    const isNew = nu && nu.yuHearts[i];
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+      <div class="col-icon">${ok?'💭':'❔'}</div>
+      <div class="col-name">${ok?name:'？？？'}</div>
+      <div class="col-tip">心事 ${i+1}${isNew?' · 新':''}</div>
+    </div>`;
+  });
+  Object.keys(COL_DATA.yu.endings).forEach(k=>{
+    const key = 'yu_'+k;
+    const ok = COL.endings[key];
+    const isNew = nu && nu.endings[key];
+    const label = k==='lover'?'恋人':k==='friend'?'好友':'错过';
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+      <div class="col-icon">${ok?(k==='lover'?'💗':k==='friend'?'🤝':'🍂'):'❔'}</div>
+      <div class="col-name">${ok?COL_DATA.yu.endings[k]:'？？？'}</div>
+      <div class="col-tip">结局·${label}${isNew?' · 新':''}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<div class="col-section"><div class="col-sec-title">深夜事件</div><div class="col-grid">`;
+  COL_DATA.events.forEach(e=>{
+    const ok = COL.events[e.id];
+    const isNew = nu && nu.events[e.id];
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+      <div class="col-icon">${ok?e.icon:'❔'}</div>
+      <div class="col-name">${ok?e.name:'？？？'}</div>
+      <div class="col-tip">事件${isNew?' · 新':''}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
+  html += `<button class="m-btn" id="colClose" style="margin-top:8px">返回</button>`;
+  box.innerHTML = html;
+  box.querySelector('#colClose').onclick = ()=>{ $('#modal').classList.remove('on'); };
+  $('#modal').classList.add('on');
+}
+
+const $ = s=>document.querySelector(s);
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls)e.className=cls; if(html!==undefined)e.innerHTML=html; return e; }
+function clamp(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+// 一次性点击：防止移动端快速双击导致重复扣 AP / 重复计推荐 / 连跳多夜
+function once(fn){ let used=false; return ()=>{ if(used) return; used=true; return fn(); }; }
+function computeApMax(){
+  let ap = 5;
+  if(S.storm) ap++;
+  if(S.pendingApPenalty) ap -= S.pendingApPenalty;
+  return Math.max(3, ap);
+}
+
+function save(){
+  const data = {
+    day:S.day, tidy:S.tidy, stock:S.stock, rep:S.rep, service:S.service,
+    favors:S.favors, hearts:S.hearts, rareDone:S.rareDone, rarePity:S.rarePity,
+    lastSeen:S.lastSeen, dialogIdx:S.dialogIdx, heartQueue:S.heartQueue,
+    present:S.present, night:S.night, week:S.week,
+    qualified:S.qualified, aNights:S.aNights, failStreak:S.failStreak,
+    logs:S.logs, nightHistory:S.nightHistory,
+    weather:S.weather, blackout:S.blackout, storm:S.storm,
+    drunk:S.drunk, drunkHandled:S.drunkHandled, drunkBonus:S.drunkBonus,
+    drunkSuccess:S.drunkSuccess, inspectResult:S.inspectResult,
+    pendingApPenalty:S.pendingApPenalty, pendingSettle:S.pendingSettle,
+    apMax:S.apMax, ap:S.ap,
+    yuState:S.yuState, yuScore:S.yuScore, yuCorrect:S.yuCorrect,
+    yuHearts:S.yuHearts, yuHeartQueue:S.yuHeartQueue,
+    yuLookCount:S.yuLookCount, yuSeen:S.yuSeen,
+    yuLookTonight:S.yuLookTonight, yuHintTonight:S.yuHintTonight,
+    yuActCount:S.yuActCount,
+    pendingPhoto:S.pendingPhoto, photoDone:S.photoDone, yuInNight:S.yuInNight,
+    yuShown:S.yuShown, newUnlocks:S.newUnlocks
+  };
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e){}
+}
+function load(){
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    if(!d.hearts) d.hearts = {};
+    if(!d.dialogIdx) d.dialogIdx = {};
+    if(!d.heartQueue) d.heartQueue = {};
+    if(!d.favors) d.favors = {};
+    if(!d.night) d.night = { manage:0, special:0, general:0, rec:0 };
+    if(!d.week) d.week = { rec:0, general:0 };
+    if(d.yuHearts === undefined) d.yuHearts = 0;
+    if(!d.yuHeartQueue) d.yuHeartQueue = [];
+    if(d.yuShown === undefined) d.yuShown = false;
+    if(d.yuLookCount === undefined) d.yuLookCount = 0;
+    if(d.yuSeen === undefined) d.yuSeen = 0;
+    if(d.yuLookTonight === undefined) d.yuLookTonight = false;
+    if(d.yuHintTonight === undefined) d.yuHintTonight = false;
+    if(d.yuActCount === undefined) d.yuActCount = 0;
+    if(d.pendingSettle === undefined) d.pendingSettle = false;
+    if(d.stock === undefined) d.stock = STOCK_INIT;
+    if(!d.newUnlocks) d.newUnlocks = { hearts:{}, rare:{}, endings:{}, events:{}, yuHearts:{} };
+    CHAR_IDS.forEach(id=>{
+      if(d.favors[id] === undefined) d.favors[id] = 0;
+      if(d.hearts[id] === undefined) d.hearts[id] = 0;
+      if(!d.dialogIdx[id]) d.dialogIdx[id] = { special:0, general:0 };
+      if(!d.heartQueue[id]) d.heartQueue[id] = [];
+    });
+    Object.assign(S, d);
+    return true;
+  } catch(e){ return false; }
+}
+function clearSave(){
+  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+}
+
+function rollWeatherAndEvents(){
+  S.weather = Math.random() < 0.30 ? 'rain' : 'clear';
+  S.blackout = false; S.storm = false;
+  S.drunk = false; S.drunkHandled = false;
+  S.drunkBonus = 0; S.drunkSuccess = false;
+  S.inspectResult = null; S.yuInNight = false; S.yuShown = false;
+  if(S.day >= 6 && S.day <= 25 && Math.random() < 0.08){
+    S.blackout = true; recordEvent('blackout'); return;
+  }
+  if(S.weather === 'rain' && Math.random() < 0.15){
+    S.storm = true; recordEvent('storm'); return;
+  }
+  if(S.day >= 6 && S.day <= 25 && !S.blackout){
+    const base = S.tidy < TIDY_TARGET ? 0.20 : 0.10;
+    if(Math.random() < base){ S.drunk = true; recordEvent('drunk'); }
+  }
+}
+
+function renderHUD(){
+  const pct = calcRevenuePct();
+  const passLine = S.blackout ? BLACKOUT_PASS_PCT : PASS_PCT;
+  const tidyCls = S.tidy >= TIDY_TARGET ? '#8fd6a8' : S.tidy >= TIDY_TARGET-15 ? '#ffd08a' : '#e88f9a';
+  const pctCls  = pct >= A_PCT ? '#8fd6a8' : pct >= passLine ? '#ffd08a' : '#e88f9a';
+  const stockCls = S.stock >= 50 ? '#8fd6a8' : S.stock >= 25 ? '#ffd08a' : '#e88f9a';
+  const wIcon = S.weather === 'rain' ? '🌧' : '☀';
+  $('#hud').innerHTML = `
+    <div class="row">
+      <span>第 <b>${S.day}</b>/${TOTAL_DAYS} 夜 ${wIcon}</span>
+      <span class="sep">|</span>
+      <span>AP <b>${S.ap}</b>/${S.apMax}</span>
+      <span class="sep">|</span>
+      <span>合格 <b>${S.qualified}</b>/${LOVER_GATE.qualified} · A级 <b>${S.aNights}</b>/${LOVER_GATE.aNights}</span>
+    </div>
+    <div class="row" style="margin-top:2px">
+      <span style="color:${pctCls}">营收 <b style="color:${pctCls}">${pct}%</b>${S.blackout?' <span style="color:#6d80a0">/线80</span>':''}</span>
+      <span class="sep">|</span>
+      <span style="color:${tidyCls}">整洁 <b style="color:${tidyCls}">${S.tidy}</b></span>
+      <span class="sep">|</span>
+      <span style="color:${stockCls}">货架 <b style="color:${stockCls}">${S.stock}</b></span>
+      <span class="sep">|</span>
+      <span>口碑 <b>${S.rep}</b>${S.rep>=YU_REP_GATE?' <span style="color:#8fd6a8">✦</span>':''}</span>
+      <span class="sep">|</span>
+      <span>服务 <b>${S.service}</b>${S.service>=YU_SVC_GATE?' <span style="color:#8fd6a8">✦</span>':''}</span>
+    </div>`;
+}
+function calcRevenuePct(){
+  const base = Math.round(
+    BASE_PCT
+    + M_GAIN_PCT * S.night.manage
+    + S_GAIN_PCT * S.night.special
+    + G_GAIN_PCT * S.night.general
+    + REC_GAIN_PCT * S.night.rec
+    + S.drunkBonus
+  );
+  return Math.round(base * stockFactor());
+}
+function calcRevenue(pct){
+  const p = (pct!==undefined?pct:calcRevenuePct());
+  return Math.floor(revenueTarget(S.day) * p / 100);
+}
+function addLog(text, cls){
+  S.logs.unshift({ text, cls: cls||'' });
+  if(S.logs.length > 14) S.logs.pop();
+  renderLogs();
+}
+function renderLogs(){
+  $('#logBox').innerHTML = S.logs.map(l=>`<div class="log ${l.cls}">${l.text}</div>`).join('');
+}
+function renderBanner(){
+  const b = $('#eventBanner'); b.innerHTML = '';
+  if(S.blackout){
+    b.innerHTML = `<div class="notice blue">⚠ 深夜停电。补货不可用，整理只 +6。今晚合格线降至 <b>80%</b>，A 级线不变。</div>`;
+  }else if(S.storm){
+    b.innerHTML = `<div class="notice gold">⚠ 暴雨封路。客人滞留，今晚 AP +1。</div>`;
+  }else if(S.drunk){
+    b.innerHTML = `<div class="notice">⚠ 门口有个喝多了的人在晃。打烊前得处理。</div>`;
+  }else if(S.yuHintTonight){
+    /* 层 0 暗示（每晚只掷一次，见 nextDay）：当晚顶掉天气横幅，天气仍在标题行 */
+    b.innerHTML = `<div class="notice blue">门口好像站着一个人。等你再看，只剩雨。</div>`;
+  }else if(S.weather === 'rain'){
+    b.innerHTML = `<div class="notice blue">🌧 小雨。玻璃上起了雾，雨声很轻。苏妄大概会来。</div>`;
+  }else if(S.weather === 'clear'){
+    b.innerHTML = `<div class="notice gold">☀ 晴。街上比平时热闹些，偶尔有人推门进来。</div>`;
+  }
+}
+function renderNight(){
+  const weatherName = S.blackout ? '深夜停电' : S.storm ? '暴雨' : S.weather === 'rain' ? '小雨' : '晴';
+  $('#dayTitle').innerHTML = `第 <b>${S.day}</b> 夜 · 22:00 · ${weatherName}`;
+  $('#meta').innerHTML = `目标营业额 ${revenueTarget(S.day)} · 整洁需 ≥${TIDY_TARGET} · 货架每晚 −${STOCK_DECAY} · 整洁每晚 −${TIDY_DECAY}`;
+  renderBanner();
+  const ga = $('#guestArea'); ga.innerHTML = '';
+  if(S.present.length === 0) ga.appendChild(el('div', 'log', '今晚没有客人来。店很安静。'));
+  S.present.forEach(id=>{
+    const c = CHARS[id], f = S.favors[id];
+    const isSuRain = S.weather === 'rain' && id === 'su';
+    const card = el('div','guest');
+    card.innerHTML = `
+      <div class="g-top">
+        <div class="avatar" style="background:${c.color}">${c.name[0]}</div>
+        <div><div class="g-name">${c.name}</div><div class="g-title">${c.title}</div></div>
+        <div class="g-favor">
+          <div class="g-tier" style="color:${tierColor(f)}">${tierOf(f)}</div>
+          <div class="g-num">好感 ${f}</div>
+        </div>
+      </div>
+      <div class="g-bar"><i style="width:${f}%;background:${tierColor(f)}"></i></div>
+      <div class="g-hint">${getCharHint(id)}</div>
+      ${isSuRain?`<div class="g-rain">🌧 雨声让他放松，今晚说错话，他也不会介意。</div>`:''}
+      <div class="g-btns">
+        <button class="btn btn-spec" data-id="${id}" data-type="special" ${S.ap<2?'disabled':''}>互动 · 2AP</button>
+        <button class="btn btn-gen"  data-id="${id}" data-type="general" ${S.ap<1?'disabled':''}>搭话 · 1AP</button>
+      </div>`;
+    ga.appendChild(card);
+  });
+  ga.querySelectorAll('button[data-id]').forEach(b=>{
+    b.onclick = ()=>openDialog(b.dataset.id, b.dataset.type);
+  });
+  renderActions();
+  renderHUD();
+}
+function renderActions(){
+  const a = $('#actions');
+  const buyDisabled = S.ap<1 || S.blackout;
+  const tidyDisabled = S.ap<1;
+  const stockWarn = S.stock >= STOCK_FULL ? '（已满）' : '';
+
+  /* 门口按钮：层 0「去门口看看」/ 层 2「看向门口」，都是 0AP，每晚各一次 */
+  let doorBtn = '';
+  const canLook0 = S.yuState === 0 && S.day >= 6 && !S.yuLookTonight;
+  const canLook2 = S.yuState >= 2 && S.yuState <= 4 && !S.yuLookTonight;
+  if(canLook0){
+    doorBtn = `<button class="btn btn-door" id="btnDoor">去门口看看</button>`;
+  }else if(canLook2){
+    doorBtn = `<button class="btn btn-door" id="btnDoor">看向门口</button>`;
+  }
+  if(doorBtn) a.classList.add('four'); else a.classList.remove('four');
+
+  a.innerHTML = `
+    <button class="btn btn-buy"  id="btnBuy"  ${buyDisabled?'disabled':''}>补货 · 1AP${stockWarn}</button>
+    <button class="btn btn-tidy" id="btnTidy" ${tidyDisabled?'disabled':''}>整理 · 1AP${S.blackout?'(+6)':''}</button>
+    ${doorBtn}
+    <button class="btn btn-close" id="btnClose">打烊</button>`;
+  $('#btnBuy').onclick  = doRestock;
+  $('#btnTidy').onclick = doTidy;
+  $('#btnClose').onclick= closeShop;
+  const db = $('#btnDoor');
+  if(db) db.onclick = ()=>{
+    if(S.yuState === 0) doLookAtDoor();
+    else showYuLookDialog();
+  };
+}
+
+function doRestock(){
+  if(S.ap < 1 || S.blackout) return;
+  S.ap--; S.night.manage++;
+  const before = S.stock;
+  S.stock = clamp(S.stock + STOCK_RESTOCK, 0, STOCK_FULL);
+  const gained = S.stock - before;
+  if(gained === 0) addLog('货架本来就是满的，你只是象征性地整理了一下。', '');
+  else addLog(`你补了货，货架 +${gained}。`, 'up');
+  renderNight();
+}
+function doTidy(){
+  if(S.ap < 1) return;
+  S.ap--;
+  const before = S.tidy;
+  const amount = S.blackout ? TIDY_BLACKOUT : TIDY_MANAGE;
+  S.tidy = clamp(S.tidy + amount, 0, 100);
+  const gained = S.tidy - before;
+  addLog(S.blackout
+    ? `点着应急灯擦了货架，整洁 +${gained}。`
+    : `你整理了货架，整洁 +${gained}。`, gained>0?'up':'');
+  renderNight();
+}
+
+function openDialog(id, type){
+  const cost = type==='special' ? 2 : 1;
+  if(S.ap < cost){ addLog('行动点不够了。','down'); return; }
+  const c = CHARS[id];
+  const pool = type==='special' ? c.special : c.general;
+  const idx = S.dialogIdx[id][type] % pool.length;
+  S.dialogIdx[id][type]++;
+  const d = pool[idx];
+  const isFamiliar = S.favors[id] >= FAMILIAR_FAVOR;
+  const shuffledOpts = shuffle([...d.o]);
+
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">${c.name} · ${type==='special'?'互动':'搭话'}</div>
+    <div class="m-scene">${d.s}</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  shuffledOpts.forEach(opt=>{
+    const b = el('button','opt', opt.t);
+    if(isFamiliar && opt.r === 'best'){
+      b.style.color = '#d8e4f2';
+      b.style.borderColor = '#2f4066';
+    }
+    b.onclick = once(()=>chooseOption(id, type, opt));
+    ow.appendChild(b);
+  });
+  $('#modal').classList.add('on');
+}
+function queueHearts(id){
+  while(S.hearts[id] < 3 && S.favors[id] >= HEART_THRESHOLDS[S.hearts[id]]){
+    const idx = S.hearts[id];
+    S.heartQueue[id].push(idx);
+    recordHeart(id, idx);
+    S.hearts[id]++;
+    S.favors[id] = clamp(S.favors[id] + 3, 0, 100);
+  }
+}
+function chooseOption(id, type, opt){
+  const c = CHARS[id];
+  const cost = type==='special' ? 2 : 1;
+  S.ap -= cost;
+  if(type==='special'){
+    S.night.special++;
+  }else{
+    S.night.general++;
+    S.week.general++;
+  }
+  let gain = favorGain(c.diff, type, opt.r);
+  if(S.blackout && gain > 0) gain += 1;
+  if(S.weather === 'rain' && id === 'su' && gain < 0) gain = 0;
+  S.favors[id] = clamp(S.favors[id] + gain, 0, 100);
+  queueHearts(id);
+
+  let res = '';
+  if(gain > 0)      res = `<span class="g">好感 +${gain}</span>`;
+  else if(gain < 0) res = `<span class="r">好感 ${gain}</span>`;
+  else if(S.weather==='rain' && id==='su' && opt.r==='worst')
+                    res = `<span style="color:#8fa8d0">好感 ±0（雨声让他没在意）</span>`;
+  else              res = `<span style="color:#6d80a0">好感 ±0</span>`;
+
+  const needRec = type==='special' && opt.r==='best';
+
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">${c.name}</div>
+    <div class="m-res">${res}</div>
+    ${needRec?`<div style="font-size:12px;color:#8fa3bd;margin-bottom:10px">他常买的那款，要不要顺手递过去？</div>
+    <button class="m-btn" id="mRec" style="margin-bottom:8px">顺手把他常买的递过去</button>
+    <button class="m-btn" id="mNoRec" style="background:#131d30;border-color:#1d2c48;color:#9fb2cc">不了，就这样</button>`
+    :`<button class="m-btn" id="mOk">继续</button>`}`;
+  if(needRec){
+    box.querySelector('#mRec').onclick = once(()=>{
+      S.night.rec++; S.week.rec++;
+      addLog(`${c.name} · 顺手递了常买的，营收 +8%`, 'up');
+      proceedAfterDialog(id);
+    });
+    box.querySelector('#mNoRec').onclick = once(()=> proceedAfterDialog(id));
+  }else{
+    box.querySelector('#mOk').onclick = once(()=> proceedAfterDialog(id));
+  }
+  addLog(`${c.name}：${opt.t}`, gain>0?'up':gain<0?'down':'');
+  renderHUD();
+}
+function proceedAfterDialog(id){
+  $('#modal').classList.remove('on');
+  if(S.heartQueue[id].length > 0) showHeartEvent(id);
+  else{
+    if(S.ap <= 0) addLog('行动点用完了，该打烊了。');
+    renderNight();
+  }
+}
+
+function showHeartEvent(id){
+  const c = CHARS[id];
+  const idx = S.heartQueue[id].shift();
+  const e = c.heartEvents[idx];
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">${c.name} · 心事 ${idx+1}</div>
+    <div class="m-scene">${e.s}</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  shuffle([...e.o]).forEach(opt=>{
+    const b = el('button','opt', opt.t);
+    b.onclick = once(()=> chooseHeart(id, idx, opt));
+    ow.appendChild(b);
+  });
+  $('#modal').classList.add('on');
+}
+function chooseHeart(id, idx, opt){
+  const c = CHARS[id];
+  const bonus = opt.r === 'best' ? 2 : 0;
+  if(bonus > 0) S.favors[id] = clamp(S.favors[id] + bonus, 0, 100);
+  queueHearts(id);
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">${c.name}</div>
+    <div class="m-res">${bonus > 0
+      ? `<span class="g">好感额外 +2</span>`
+      : `<span style="color:#6d80a0">好感 ±0</span>`}
+      <div style="margin-top:10px;font-size:11.5px;color:#6d80a0;line-height:1.7">${c.hearts[idx]}</div>
+    </div>
+    <button class="m-btn" id="mOk">继续</button>`;
+  box.querySelector('#mOk').onclick = ()=>{
+    $('#modal').classList.remove('on');
+    if(S.heartQueue[id].length > 0) showHeartEvent(id);
+    else{
+      if(S.ap <= 0) addLog('行动点用完了，该打烊了。');
+      renderNight();
+    }
+  };
+  addLog(`${c.name} 的心事 · 第${idx+1}段`, 'gold');
+  renderHUD();
+}
+
+function showDrunkEvent(){
+  recordEvent('drunk');
+  const badTidy = S.tidy < TIDY_TARGET;
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">醉客闹店</div>
+    <div class="m-scene">一个喝多了的人推门进来，在货架间大声嚷嚷。${badTidy?'店里本来就乱，他更来劲了。':''}</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  [
+    {t:'强硬驱赶 / 报警', k:'hard'},
+    {t:'安抚，递一杯水', k:'soft'},
+    {t:'假装没看见', k:'ignore'}
+  ].forEach(o=>{
+    const b = el('button','opt', o.t);
+    b.onclick = ()=> resolveDrunk(o.k);
+    ow.appendChild(b);
+  });
+  $('#modal').classList.add('on');
+}
+function resolveDrunk(kind){
+  const badTidy = S.tidy < TIDY_TARGET;
+  let tidyDelta = 0, bonus = 0, msg = '', success = false;
+  if(kind === 'hard'){
+    if(!badTidy){ bonus = DRUNK_HARD_BONUS; success = true; msg = `你把他请了出去。店里恢复了安静。营业额 +${DRUNK_HARD_BONUS}%。`; }
+    else { tidyDelta = -10; msg = '他推了你一把，货架倒了一排。整洁 −10。'; }
+  }else if(kind === 'soft'){
+    if(!badTidy){ bonus = DRUNK_SOFT_BONUS; tidyDelta = -2; success = true; msg = `他接过水，嘟囔了几句，走了。整洁 −2，营业额 +${DRUNK_SOFT_BONUS}%。`; }
+    else { tidyDelta = -8; msg = '他根本没听，撞翻了一排饮料。整洁 −8。'; }
+  }else{
+    if(!badTidy){ tidyDelta = -2; msg = '他自己晃了两圈，走了。整洁 −2。'; }
+    else {
+      tidyDelta = -15; msg = '他摔了东西才走。整洁 −15。';
+      S.present.forEach(id => S.favors[id] = clamp(S.favors[id] - 1, 0, 100));
+      if(S.present.length) msg += ' 在场的客人被吓到了，好感 −1。';
+    }
+  }
+  S.tidy = clamp(S.tidy + tidyDelta, 0, 100);
+  S.drunkBonus = bonus;
+  S.drunkHandled = true;
+  S.drunkSuccess = success;
+  if(success) S.rep = clamp(S.rep + 1, 0, 100);
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">处理结果</div>
+    <div class="m-res">${msg}${success?'<br><span class="g">口碑 +1</span>':''}</div>
+    <button class="m-btn" id="mOk">继续结算</button>`;
+  box.querySelector('#mOk').onclick = ()=>{
+    $('#modal').classList.remove('on');
+    continueClose();
+  };
+  addLog(msg, tidyDelta < 0 ? 'down' : 'up');
+}
+
+/* ---------- 林屿 · 层 1：见到但不可攻略（yuState = 1）---------- */
+function showYuStageB(){
+  if(S.yuState !== 1) return false;
+  if(S.yuShown) return false;
+  S.yuSeen++;
+  const box = $('#modalBox');
+  const texts = [
+    '门口站着一个穿深色连帽卫衣的人。他推门进来，拿了一瓶热牛奶，付了钱，一句话没说，走了。<br><br>付钱的时候，他看了你一眼，又移开了。',
+    '他又来买热牛奶。这次没看你，只是盯着柜台上的关东煮看了很久。',
+    '他把钱放在柜台上，没等找零就走了。你好像……在哪里见过这个人。'
+  ];
+  const idx = Math.min(S.yuSeen - 1, 2);
+  box.innerHTML = `
+    <div class="m-title">门口的人</div>
+    <div class="m-scene">${texts[idx]}</div>
+    <button class="m-btn" id="mOk">继续</button>`;
+  box.querySelector('#mOk').onclick = once(()=>{
+    $('#modal').classList.remove('on');
+    addLog('他买了一瓶热牛奶，走了。', 'gold');
+    if(S.yuSeen >= 3 && !S.photoDone){
+      addLog('你翻出林川落下的那张旧照片。两张年轻的脸。', 'gold');
+    }
+    if(S.photoDone && S.yuState === 1){
+      S.yuState = 2;
+      S.yuSeen = 0;
+      addLog('你知道他是谁了。', 'gold');
+    }
+    S.yuShown = true;
+    renderNight();
+  });
+  $('#modal').classList.add('on');
+  return true;
+}
+/* 每晚的出场掷骰（层 1 专用），reload 时也不会重复触发 */
+function tryYuAppear(){
+  if(S.yuState !== 1) return false;
+  if(S.yuShown) return false;
+  if(Math.random() >= YU_APPEAR_RATE) return false;
+  return showYuStageB();
+}
+
+/* ---------- 打烊时的林屿流程：状态 2–4 三选一 / 5 坦白 / 6 每晚 +1 ---------- */
+function showYuStageCD(){
+  if(S.yuShown) return false;
+  if(S.yuState >= 2 && S.yuState <= 4){
+    const day = S.yuState - 1;
+    const texts = [
+      '他又来了。站在货架前，没看手机。',
+      '他站在窗边，看着外面的雨。',
+      '他站在收银台前，看了一眼你的工牌。'
+    ];
+    const opts = [
+      [
+        {t:'假装没注意，继续理货', r:'best'},
+        {t:'「需要帮忙吗？」', r:'worst'},
+        {t:'「今天也这么晚？」', r:'worst'}
+      ],
+      [
+        {t:'递过去一罐热牛奶', r:'best'},
+        {t:'「你是在等谁吗？」', r:'worst'},
+        {t:'「你喜欢雨？」', r:'worst'}
+      ],
+      [
+        {t:'「附近的医院，最近很忙吧。」', r:'best'},
+        {t:'「你认识林川吗？」', r:'worst'},
+        {t:'「你每天都来吗？」', r:'worst'}
+      ]
+    ];
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <div class="m-title">门口的人 · ${day}/3</div>
+      <div class="m-scene">${texts[day-1]}</div>
+      <div id="optWrap"></div>`;
+    const ow = box.querySelector('#optWrap');
+    shuffle([...opts[day-1]]).forEach(opt=>{
+      const b = el('button','opt', opt.t);
+      b.onclick = once(()=>{
+        /* 打烊轮是「被动」的免费分寸：选对 +1。
+           「看向门口」是 0AP 的额外一档：选对 +2。两边都是注意力，不是资源（见 ⑲） */
+        if(opt.r === 'best'){ S.yuScore += 1; S.yuCorrect++; addLog('你做了温和的选择。', 'gold'); }
+        else addLog('他微微皱了下眉。', 'down');
+        S.yuState++;
+        S.yuShown = true;
+        queueYuHearts();
+        $('#modal').classList.remove('on');
+        if(S.yuHeartQueue.length > 0){ showYuHeart(); }
+        else continueClose();
+      });
+      ow.appendChild(b);
+    });
+    $('#modal').classList.add('on');
+    return true;
+  }
+  if(S.yuState === 5){
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <div class="m-title">第四次</div>
+      <div class="m-scene">他推门进来，没有走向货架，而是在你面前站定。<br>「……我是林川的哥哥。」<br>他摘下口罩。两张年轻的脸，现在只剩一张。</div>
+      <button class="m-btn" id="mOk">继续</button>`;
+    box.querySelector('#mOk').onclick = once(()=>{
+      $('#modal').classList.remove('on');
+      S.yuScore += 4;
+      S.yuState = 6;
+      S.yuSeen = 3;
+      S.yuShown = true;
+      addLog('林屿正式解锁。', 'gold');
+      queueYuHearts();
+      if(S.yuHeartQueue.length > 0){ showYuHeart(); }
+      else continueClose();
+    });
+    $('#modal').classList.add('on');
+    return true;
+  }
+  if(S.yuState === 6 && S.day < 29){
+    S.yuInNight = true;
+    S.yuScore += 1;   // 解锁后每晚被动 +1：主动互动（每次 +2）才是拉满分寸的手段
+    S.yuShown = true;
+    queueYuHearts();
+    const msg = S.yuScore >= 7
+      ? '打烊前，他又站在门口。这次，他朝你点了点头。'
+      : '打烊前，他又站在门口。你关了灯，他还在那儿。';
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <div class="m-title">门口</div>
+      <div class="m-scene">${msg}<br><span style="font-size:11px;color:#8fd6a8">分寸值 +1（${S.yuScore}）</span></div>
+      <button class="m-btn" id="mOk">继续</button>`;
+    box.querySelector('#mOk').onclick = once(()=>{
+      $('#modal').classList.remove('on');
+      if(S.yuHeartQueue.length > 0){ showYuHeart(); }
+      else continueClose();
+    });
+    $('#modal').classList.add('on');
+    return true;
+  }
+  return false;
+}
+
+/* ---------- 层 0：去门口看看（0AP，累积查看次数；叙事入口，不参与「一晚一件事」的取舍）---------- */
+function doLookAtDoor(){
+  if(S.yuState !== 0) return;
+  if(S.yuLookTonight) { addLog('今晚已经看过了。'); return; }
+  S.yuLookTonight = true;
+  S.yuLookCount++;
+  const texts = [
+    '门口没人。地上有个空牛奶瓶，还是温的。',
+    '你推开门，街上空荡荡的。刚才那个影子，好像只是雨。',
+    '你看见一个穿深色卫衣的背影，走远了。走得很快。'
+  ];
+  const t = texts[Math.min(S.yuLookCount-1, texts.length-1)];
+  addLog(t, 'gold');
+  checkYuLookProgress();
+  renderNight();
+}
+function checkYuLookProgress(){
+  if(S.yuState !== 0) return;
+  if(S.yuLookCount < YU_LOOK_GATE) return;
+  S.yuState = 1;
+  S.yuSeen = 0;
+  addLog('门口那个人，今晚又来了。', 'gold');
+}
+
+/* ---------- 层 2：看向门口（0AP，叠加在打烊轮之上，不替代它）----------
+   取舍是「注意力」不是「资源」：花钱看门口会让玩家拿关店换分寸，
+   实测主动 3 次关门率 54.1%——玩家先出局，根本没到结算。
+   每晚限 1 次（yuLookTonight），不推进 yuState（那是打烊轮的职责），
+   不读也不写 yuShown——只自己管 yuLookTonight 与 yuActCount。 */
+function showYuLookDialog(){
+  if(S.yuState < 2 || S.yuState > 4) return;
+  if(S.yuLookTonight) return;
+  S.yuLookTonight = true;
+
+  const rounds = {
+    2: {
+      s: '他站在门口，没有进来。你看着他，他也看着你。',
+      o: [
+        {t:'朝他点了一下头', r:'best'},
+        {t:'低下头继续理货', r:'worst'},
+        {t:'「还开着呢。」', r:'worst'}
+      ]
+    },
+    3: {
+      s: '他手里捏着一个空牛奶瓶，站了很久。',
+      o: [
+        {t:'什么都不说，只是把门口的灯调亮一点', r:'best'},
+        {t:'「还要一瓶吗？」', r:'worst'},
+        {t:'走过去，把门推开', r:'worst'}
+      ]
+    },
+    4: {
+      s: '他抬起头，看了一眼店里的灯。',
+      o: [
+        {t:'「附近的医院，最近很忙吧。」', r:'best'},
+        {t:'「你每天都来吗？」', r:'worst'},
+        {t:'「你是不是在等人？」', r:'worst'}
+      ]
+    }
+  };
+  const d = rounds[S.yuState];
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">看向门口</div>
+    <div class="m-scene">${d.s}</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  shuffle([...d.o]).forEach(opt=>{
+    const b = el('button','opt', opt.t);
+    b.onclick = once(()=>{
+      S.yuActCount++;          // 主动「看向门口」次数，不管选对选错
+      if(opt.r === 'best'){
+        S.yuScore += 2;
+        S.yuCorrect++;
+        addLog('他朝你点了点头。', 'gold');
+      }else{
+        addLog('他没有回应。', 'down');
+      }
+      queueYuHearts();
+      $('#modal').classList.remove('on');
+      if(S.yuHeartQueue.length > 0){ showYuHeart(true); }
+      else renderNight();
+    });
+    ow.appendChild(b);
+  });
+  $('#modal').classList.add('on');
+}
+function queueYuHearts(){
+  const thresholds = [3, 6, 9];
+  while(S.yuHearts < 3 && S.yuScore >= thresholds[S.yuHearts]){
+    const idx = S.yuHearts;
+    S.yuHeartQueue.push(idx);
+    recordYuHeart(idx);
+    S.yuHearts++;
+  }
+}
+function showYuHeart(afterNight){
+  const idx = S.yuHeartQueue.shift();
+  const texts = [
+    '他站在门口，没进来。你关了灯，他才转身走。',
+    '他说起五年前的事，声音很轻。「我以为他会恨我。」',
+    '「把店交给你，我放心了。」他说完，笑了一下。'
+  ];
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">林屿 · 心事 ${idx+1}</div>
+    <div class="m-scene">${texts[idx]}</div>
+    <button class="m-btn" id="mOk">继续</button>`;
+  box.querySelector('#mOk').onclick = ()=>{
+    $('#modal').classList.remove('on');
+    if(S.yuHeartQueue.length > 0) showYuHeart(afterNight);
+    else if(afterNight) renderNight();   // 主动互动是夜里触发的，不能就此打烊
+    else continueClose();
+  };
+  $('#modal').classList.add('on');
+  addLog(`林屿 的心事 · 第${idx+1}段`, 'gold');
+}
+
+function tryPhotoScene(){
+  if(!S.pendingPhoto || S.photoDone) return false;
+  if(!S.present.includes('lin')) return false;
+  S.photoDone = true;
+  S.pendingPhoto = false;
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">林川 · 旧照片</div>
+    <div class="m-scene">一张旧照片从他口袋里滑出来，落在地上。两张年轻的脸，笑得很傻。</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  shuffle([
+    {t:'不看照片，只说「我在听」', r:'best'},
+    {t:'「这是谁？」', r:'mid'}
+  ]).forEach(opt=>{
+    const b = el('button','opt', opt.t);
+    b.onclick = ()=>{
+      if(opt.r === 'best'){
+        S.favors.lin = clamp(S.favors.lin + 5, 0, 100);
+        addLog('林川 · 好感 +5', 'up');
+      }
+      if(S.hearts.lin < 2){
+        while(S.hearts.lin < 2){
+          const idx = S.hearts.lin;
+          S.heartQueue.lin.push(idx);
+          recordHeart('lin', idx);
+          S.hearts.lin++;
+          S.favors.lin = clamp(S.favors.lin + 3, 0, 100);
+        }
+      }
+      queueHearts('lin');
+      /* 老照片看完 → 林屿从「见到但不可攻略」直接进可攻略 */
+      if(S.yuState === 1){
+        S.yuState = 2;
+        S.yuSeen = 0;
+        addLog('你知道他是谁了。', 'gold');
+      }
+      $('#modal').classList.remove('on');
+      if(S.heartQueue.lin.length > 0) showHeartEvent('lin');
+      else renderNight();
+    };
+    ow.appendChild(b);
+  });
+  $('#modal').classList.add('on');
+  return true;
+}
+
+function checkManagerInspection(){
+  if(S.day !== 10 && S.day !== 20) return null;
+  recordEvent('inspect');
+  const recent = S.nightHistory.slice(-7);
+  const passed = recent.filter(Boolean).length;
+  let result;
+  if(passed >= 5){
+    S.rep = clamp(S.rep + 4, 0, 100);
+    S.service = clamp(S.service + 2, 0, 100);
+    result = { type:'pass', text:'店长来转了一圈，翻了翻台账，点了点头。口碑 +4，服务 +2。', penalty:0 };
+  }else if(passed >= 3){
+    result = { type:'ok', text:'店长来转了一圈，没说什么，走了。', penalty:0 };
+  }else{
+    S.rep = clamp(S.rep - 8, 0, 100);
+    S.service = clamp(S.service - 5, 0, 100);
+    // 不再扣明晚 AP：4AP 夜数学上无法及格，AP−1 等于白送 2 次失败计数
+    result = { type:'fail', text:'店长把台账拍在柜台上：「这个月的数据很难看。再这样下去，你就可以走人了。」<br>今晚营业额 −10%。口碑 −8，服务 −5。', penalty:10 };
+  }
+  S.inspectResult = result;
+  return result;
+}
+
+function tryRareEvent(){
+  const hits = [];
+  S.present.forEach(id=>{
+    if(S.rareDone[id]) return;
+    const [st, en] = RARE_WINDOWS[id];
+    if(S.day < st || S.day > en) return;
+    /* 林川门槛 35：稀有事件本身 +15，触发时林川好感基本在 50 以上，
+       40 与 35 都过——改的只是「什么时候能触发」（老照片是林屿线的钥匙） */
+    if(S.favors[id] < (id === 'lin' ? 35 : 40)) return;
+    const pity = S.rarePity[id] || 0;
+    if(pity >= 4) hits.push(id);
+    else if(Math.random() < 0.25) hits.push(id);
+    S.rarePity[id] = pity + 1;
+  });
+  if(hits.length === 0) return null;
+  const id = hits[Math.floor(Math.random()*hits.length)];
+  S.rareDone[id] = true;
+  S.rarePity[id] = 0;
+  S.favors[id] = clamp(S.favors[id] + 15, 0, 100);
+  recordRare(id);
+  queueHearts(id);
+  if(id === 'lin') S.pendingPhoto = true;
+  return id;
+}
+
+function confirmCloseIfApLeft(cb){
+  if(S.ap <= 0){ cb(); return; }
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="m-title">打烊确认</div>
+    <div class="m-scene">你还有 <b style="color:#ffd08a">${S.ap}</b> 点行动力。<br>确定就这样打烊吗？</div>
+    <button class="m-btn" id="mOk" style="margin-bottom:8px">确定打烊</button>
+    <button class="m-btn" id="mCancel" style="background:#131d30;border-color:#1d2c48;color:#9fb2cc">再想想</button>`;
+  box.querySelector('#mOk').onclick = once(()=>{
+    $('#modal').classList.remove('on');
+    cb();
+  });
+  box.querySelector('#mCancel').onclick = once(()=>{
+    $('#modal').classList.remove('on');
+  });
+  $('#modal').classList.add('on');
+}
+function closeShop(){
+  confirmCloseIfApLeft(()=>{
+    if(S.drunk && !S.drunkHandled){ showDrunkEvent(); return; }
+    if(showYuStageCD()) return;
+    doSettlement();
+  });
+}
+function continueClose(){
+  if(showYuStageCD()) return;
+  doSettlement();
+}
+function doSettlement(){
+  const inspect = checkManagerInspection();
+  let pct = calcRevenuePct();
+  let inspectPenalty = 0;
+  if(inspect && inspect.penalty){ inspectPenalty = inspect.penalty; pct -= inspectPenalty; }
+  const target = revenueTarget(S.day);
+  const rev = calcRevenue(pct);
+
+  S.stock = clamp(S.stock - STOCK_DECAY, 0, STOCK_FULL);
+  S.tidy = clamp(S.tidy - TIDY_DECAY, 0, 100);
+
+  const passLine = S.blackout ? BLACKOUT_PASS_PCT : PASS_PCT;
+  const revOk  = pct >= passLine;
+  const tidyOk = S.tidy >= TIDY_TARGET;
+  const passed = revOk && tidyOk;
+  const gradeA = pct >= A_PCT && S.tidy >= TIDY_TARGET;
+
+  if(passed) S.qualified++;
+  if(gradeA) S.aNights++;
+  S.nightHistory.push(passed);
+
+  let blackoutBonusHtml = '';
+  if(S.blackout && passed){
+    S.rep = clamp(S.rep + 3, 0, 100);
+    blackoutBonusHtml = `<div class="notice blue">停电夜撑过来了。口碑 +3。</div>`;
+  }
+
+  const rareId = tryRareEvent();
+  let rareHtml = '';
+  if(rareId){
+    const c = CHARS[rareId];
+    rareHtml = `<div class="notice gold">${c.name}：${c.rare}（好感 +15）</div>`;
+  }
+
+  let inspectHtml = '';
+  if(inspect){
+    inspectHtml = `<div class="notice ${inspect.type==='pass'?'gold':inspect.type==='fail'?'':'blue'}">${inspect.text}</div>`;
+  }
+
+  if(!passed){
+    S.failStreak++;
+    if(S.failStreak >= FAIL_LIMIT){
+      S.present.forEach(id => S.lastSeen[id] = S.day);
+      S.pendingSettle = false;
+      clearSave();
+      showEnding('closed');
+      return;
+    }
+  }else{
+    S.failStreak = 0;
+  }
+
+  let weekHtml = '';
+  if(S.day===7 || S.day===14 || S.day===21 || S.day===28){
+    const regulars = CHAR_IDS.filter(id => S.favors[id] >= 36).length;
+    const repUp = clamp(regulars * 2, 3, 15);
+    const svcUp = clamp(Math.round(S.week.rec + S.week.general * 0.5), 2, 12);
+    S.rep     = clamp(S.rep + repUp, 0, 100);
+    S.service = clamp(S.service + svcUp, 0, 100);
+    weekHtml = `<div class="notice gold">周结算：口碑 +${repUp} → ${S.rep}｜服务 +${svcUp} → ${S.service}</div>`;
+    S.week = { rec:0, general:0 };
+  }
+
+  S.present.forEach(id => S.lastSeen[id] = S.day);
+
+  let warnHtml = '';
+  if(!passed && S.failStreak >= FAIL_WARN){
+    const left = FAIL_LIMIT - S.failStreak;
+    warnHtml = `<div class="notice">店长来消息了：「这个月的营收，你打算怎么办？」<br>再有 ${left} 晚不达标，店就要关门。</div>`;
+  }
+
+  S.pendingSettle = true;
+  save();
+
+  const stockOk = S.stock >= 50;
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="settle-title">第 ${S.day} 夜 · 打烊</div>
+    <div class="settle-row"><span>营业额</span><b class="${revOk?'ok':'no'}">${rev} / ${target}（${pct}%）${revOk?' ✓':' ✗'}${S.blackout?' <span style="color:#6d80a0;font-size:11px">/线80</span>':''}</b></div>
+    <div class="settle-row"><span>整洁度</span><b class="${tidyOk?'ok':'no'}">${S.tidy} / ${TIDY_TARGET}${tidyOk?' ✓':' ✗'}</b></div>
+    <div class="settle-row"><span>货架（明晚）</span><b class="${stockOk?'ok':'no'}">${S.stock} / 50${stockOk?' ✓':' ✗（营收 ×'+stockFactor().toFixed(2)+'）'}</b></div>
+    <div class="settle-row"><span>今晚评价</span><b class="${gradeA?'ok':passed?'ok':'no'}">${gradeA?'A 级夜':passed?'合格夜':'不合格'}</b></div>
+    <div class="settle-row"><span>累计合格 / A 级</span><b>${S.qualified} / ${LOVER_GATE.qualified} · ${S.aNights} / ${LOVER_GATE.aNights}</b></div>
+    ${inspectPenalty?`<div class="settle-row"><span>店长罚金</span><b class="no">−${inspectPenalty}%</b></div>`:''}
+    ${weekHtml}${rareHtml}${inspectHtml}${blackoutBonusHtml}${warnHtml}
+    <button class="m-btn" id="mNext" style="margin-top:14px">${S.day>=TOTAL_DAYS?'进入结局':'下一天'}</button>`;
+  box.querySelector('#mNext').onclick = once(()=>{
+    if(!S.pendingSettle) return;   // 双保险：已推进过就不再重复跳夜
+    $('#modal').classList.remove('on');
+    nextDay();
+  });
+  $('#modal').classList.add('on');
+  addLog(`打烊。营收 ${pct}%，整洁 ${S.tidy}，货架 ${S.stock}。`, passed?'up':'down');
+}
+
+function rollVisitors(){
+  const pool = [];
+  CHAR_IDS.forEach(id=>{
+    const c = CHARS[id];
+    if(S.day < c.firstDay) return;
+    const gap = S.day - S.lastSeen[id];
+    let rate = gap >= 4 ? 1 : c.appearRate;
+    if(S.weather === 'rain' && id === 'su') rate = Math.max(rate, 0.65);
+    if(Math.random() < rate) pool.push(id);
+  });
+  if(pool.length === 0){
+    const cands = CHAR_IDS.filter(id => S.day >= CHARS[id].firstDay);
+    if(cands.length) pool.push(cands[Math.floor(Math.random()*cands.length)]);
+  }
+  if(S.pendingPhoto) pool.push('lin');
+  shuffle(pool);
+  const result = [];
+  const seen = new Set();
+  for(const id of pool){
+    if(seen.has(id)) continue;
+    seen.add(id);
+    result.push(id);
+    if(result.length >= 3) break;
+  }
+  if(S.pendingPhoto && !result.includes('lin')){
+    result[result.length-1] = 'lin';
+  }
+  return result;
+}
+
+function nextDay(){
+  if(S.day >= TOTAL_DAYS){ S.pendingSettle = false; clearSave(); startConfession(); return; }
+  S.day++;
+  S.pendingSettle = false;
+  S.yuLookTonight = false;                 // 每晚重置「今晚看过了」
+  rollWeatherAndEvents();
+  /* 层 0 暗示：每晚只掷一次，结果存进状态，避免 renderBanner 反复随机导致闪烁 */
+  S.yuHintTonight = (S.yuState === 0 && S.day >= 6 && Math.random() < YU_HINT_RATE);
+  S.apMax = computeApMax();
+  S.ap = S.apMax;
+  S.night = { manage:0, special:0, general:0, rec:0 };
+  S.present = rollVisitors();
+  S.logs = [];
+  S.pendingApPenalty = 0;
+  save();
+  renderNight();
+  if(tryPhotoScene()) return;
+  if(tryYuAppear()) return;
+}
+
+function startConfession(){
+  if(S.yuState < 6){
+    const box = $('#modalBox');
+    box.innerHTML = `
+      <div class="m-title">第三十夜</div>
+      <div class="m-scene">你把最后一盏灯关了。<br><br>门口的街灯还亮着，空荡荡的台阶上，从来没有人站过。<br><br>你总觉得好像错过了什么，却想不起，到底错过了谁。</div>
+      <button class="m-btn" id="mOk">打烊</button>`;
+    box.querySelector('#mOk').onclick = ()=>{
+      $('#modal').classList.remove('on');
+      showConfession();
+    };
+    $('#modal').classList.add('on');
+    return;
+  }
+  showConfession();
+}
+function showConfession(){
+  const box = $('#modalBox');
+  const yuEligible = S.yuState === 6 && S.yuScore >= YU_GATE;
+  box.innerHTML = `
+    <div class="m-title">最后一天</div>
+    <div class="m-scene">你站在收银台后。想说点什么的那个人，是谁？</div>
+    <div id="optWrap"></div>`;
+  const ow = box.querySelector('#optWrap');
+  CHAR_IDS.forEach(id=>{
+    const c = CHARS[id], f = S.favors[id];
+    const hint = (id === 'lin' && f >= 75 && f < 80) ? ' <span style="color:#6d80a0;font-size:11px">（恋人需 80）</span>' : '';
+    const b = el('button','opt', `${c.name} · 好感 ${f}（${tierOf(f)}）${hint}`);
+    b.onclick = ()=> finalEnding(id);
+    ow.appendChild(b);
+  });
+  if(yuEligible){
+    const b = el('button','opt', `林屿 · 分寸 ${S.yuScore}`);
+    b.style.background = '#1a1a2e';
+    b.style.borderColor = '#6b4a24';
+    b.onclick = ()=> finalYuEnding();
+    ow.appendChild(b);
+  }
+  const none = el('button','opt','谁都不选，就这样打烊');
+  none.style.color = '#6d80a0';
+  none.onclick = ()=> showEnding('none');
+  ow.appendChild(none);
+  $('#modal').classList.add('on');
+}
+function finalEnding(id){
+  const c = CHARS[id];
+  const f = S.favors[id];
+  const h = S.hearts[id];
+  let type;
+  if(f >= LOVER_GATE.favor && h >= LOVER_GATE.hearts
+     && S.qualified >= LOVER_GATE.qualified && S.aNights >= LOVER_GATE.aNights){
+    type = 'lover';
+  }else if(f >= FRIEND_GATE.favor && S.qualified >= FRIEND_GATE.qualified){
+    type = 'friend';
+  }else{
+    type = 'gone';
+  }
+  const other = CHAR_IDS.find(o => o !== id && S.favors[o] >= AFTERGLOW);
+  showEnding(type, id, other);
+}
+function finalYuEnding(){
+  /* 「全被动 0%」用显式条件，不用分数门槛：
+     被动与主动分数差最多 6 分，任何让主动到 10–15% 的门槛都会把被动带进来。
+     但显式条件只拦恋人，不拦好友（见 ㉒）：
+     全被动 = 「你一直没主动注意过他」，他搬走，可你们认识——够好友。
+     好友是「认识」，恋人是「主动」。 */
+  let type;
+  if(!S.yuActCount || S.yuActCount < YU_ACT_GATE){
+    type = S.yuScore >= YU_SCORE_FRIEND ? 'yu_friend' : 'yu_gone';
+  }else if(S.yuScore >= YU_SCORE_LOVER){
+    type = 'yu_lover';
+  }else if(S.yuScore >= YU_SCORE_FRIEND){
+    type = 'yu_friend';
+  }else{
+    type = 'yu_gone';
+  }
+  showEnding(type);
+}
+function showEnding(type, charId, otherId){
+  clearSave();
+  recordEnding(type, charId);
+
+  const labelMap = {
+    lover:'LOVER', friend:'FRIEND', gone:'GONE', closed:'CLOSED', none:'NOBODY',
+    yu_lover:'LOVER · 林屿', yu_friend:'FRIEND · 林屿', yu_gone:'GONE · 林屿'
+  };
+  const nameMap = {
+    lover:'成为恋人', friend:'成为好友', gone:'不再相遇', closed:'店铺关门', none:'谁都没选',
+    yu_lover:'成为恋人', yu_friend:'成为好友', yu_gone:'不再相遇'
+  };
+  let title = '', body = '', after = '';
+  if(type === 'closed'){
+    title = '店铺关门了';
+    body  = '连续四晚不达标。店长收回了钥匙。<br><br>你站在拉下的卷帘门外，雨还没停。玻璃上倒映着店里的灯，一盏接一盏暗下去，<br><br>像那些没说出口的心事，全都沉进了深夜里。';
+  }else if(type === 'none'){
+    title = '谁都没选';
+    body  = '三十个夜晚过去，店还开着。<br><br>熟客来了又走，你始终守在收银台后面，没和谁走得更近。<br><br>关店的时候天快亮了，卷帘门拉下来的声音很轻，像什么都没发生过。';
+  }else if(type === 'yu_lover'){
+    title = '林屿';
+    body  = '他还清最后一笔债务那天，把工作室的注册地址填在了便利店隔壁。<br><br>不再戴口罩压低帽檐，他会在凌晨五点准时推门进来，靠在吧台边等你换班。<br><br>「以后不用躲着了」，他碰了碰你的杯子，声音很轻却很稳，<br><br>「也不用远远看着了。」<br><br>城市的清晨里，三个人的影子都落得安稳。';
+  }else if(type === 'yu_friend'){
+    title = '林屿';
+    body  = '他还完了所有债，不用再躲躲藏藏。<br><br>偶尔会来店里坐会儿，碰到林川也能自然打个招呼。<br><br>每次来都买常温牛奶，站在门口喝半瓶，剩下的带走。<br><br>便利店的灯亮着，他就觉得踏实。';
+  }else if(type === 'yu_gone'){
+    title = '林屿';
+    body  = '他悄无声息地离开了这座城市。便利店的灯还是亮的，但门口再也没有徘徊的身影。<br><br>你偶尔会想起，他摘下口罩的那个晚上。<br><br>两张年轻的脸，现在只剩一张。';
+  }else{
+    const c = CHARS[charId];
+    title = c.name;
+    body  = c.endings[type];
+    if(otherId){
+      const o = CHARS[otherId];
+      after = `<div class="end-after">
+        <div class="t">余 波</div>
+        <div class="x">${o.name}还是会在固定的时间来，买固定的东西，付完钱就走。<br><br>他常坐的位置落了薄灰，你们之间什么都没发生，又好像，发生过什么。</div>
+      </div>`;
+    }
+  }
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="end-box">
+      <div class="end-label">${labelMap[type]}</div>
+      <div class="end-name">${title}</div>
+      <div class="end-char">${nameMap[type]}</div>
+      <div class="end-text">${body}</div>
+      ${after}
+      <div class="end-actions">
+        <button class="m-btn" id="mCol" style="background:#131d30;border-color:#1d2c48;color:#9fb2cc">回忆册</button>
+        <button class="m-btn" id="mEnd">重新开始</button>
+      </div>
+    </div>`;
+  box.querySelector('#mCol').onclick = ()=> renderCollection(true);
+  box.querySelector('#mEnd').onclick = ()=>{
+    $('#modal').classList.remove('on');
+    showTitle();
+  };
+  $('#modal').classList.add('on');
+}
+
+function showTitle(){
+  $('#titleScreen').classList.add('on');
+  $('#hud').style.display = 'none';
+  $('#scene').style.display = 'none';
+  $('#actions').style.display = 'none';
+  const st = collectionStats();
+  $('#tHint').innerHTML = `回忆册：${st.got} / ${st.total}<br>每一个深夜，都值得被记住。`;
+}
+function showGame(){
+  $('#titleScreen').classList.remove('on');
+  $('#hud').style.display = '';
+  $('#scene').style.display = '';
+  $('#actions').style.display = '';
+}
+
+function start(){
+  loadCollection();
+  initState();
+  $('#btnStart').onclick = ()=>{
+    clearSave();
+    initState();
+    rollWeatherAndEvents();
+    S.apMax = computeApMax();
+    S.ap = S.apMax;
+    S.present = rollVisitors();
+    S.logs = [];
+    addLog('你接手了这家深夜便利店。第一个夜班。');
+    save();
+    showGame();
+    renderNight();
+  };
+  $('#btnCollection').onclick = ()=> renderCollection(false);
+
+  const hasSave = load();
+  if(hasSave){
+    showGame();
+    if(S.pendingSettle){
+      nextDay();
+    }else{
+      renderNight();
+      if(S.pendingPhoto) tryPhotoScene();
+      else tryYuAppear();
+    }
+  }else{
+    showTitle();
+  }
+}
+start();
+</script>
+</body>
+</html>
