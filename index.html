@@ -226,9 +226,10 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
       另加显式条件 yuActCount ≥ 2 且只拦恋人（见 ⑳㉑㉒）。
       老照片是 1 → 2 的唯一钥匙，不是好感门槛。
    ⑯ 层 0「去门口看看」不消耗 AP：它是叙事入口，不是资源取舍。
+      满 3 次时若 photoDone 已真，直接进层 2（不再等 45% 出场）。
       「一晚一件事」的取舍发生在补货/整理/互动/看向门口，
       不发生在「注意到门口有个人」。实测 3AP 代价曾让陆则衍恋人 −12.7pt。
-      代价改为「每晚限 1 次」（yuLookTonight 复用），查看满 3 次 = 3 个晚上。
+      代价改为「每晚限 1 次」（yuLookNight 存夜晚号，刷新不可重复点），查看满 3 次 = 3 个晚上。
    ⑰ 林屿好友率目标 18–25%，不是 30–45%：
       好友率高意味着「错过」不痛，违背隐藏线的调性。
       林屿是「大多数人没注意到」的线，不是「人人能拿好友」的线。
@@ -684,7 +685,7 @@ function initState(){
   S.yuHeartQueue = [];
   S.yuLookCount = 0;        // 查看门口次数（层 0 累积，0–3+）
   S.yuSeen = 0;             // 层 1 已出现次数（0–3，用于三段文案递进）
-  S.yuLookTonight = false;  // 当晚是否已点过「去门口看看」/「看向门口」
+  S.yuLookNight = -1;       // 已点过门口的那一夜（-1 = 没点过；用夜晚号而非布尔，刷新不可重复点）
   S.yuActCount = 0;         // 主动「看向门口」累计次数（恋人结局显式条件）
   S.yuHintTonight = false;  // 当晚是否播层 0 暗示横幅（每晚只掷一次）
   S.pendingPhoto = false;
@@ -879,7 +880,7 @@ function save(){
     yuState:S.yuState, yuScore:S.yuScore, yuCorrect:S.yuCorrect,
     yuHearts:S.yuHearts, yuHeartQueue:S.yuHeartQueue,
     yuLookCount:S.yuLookCount, yuSeen:S.yuSeen,
-    yuLookTonight:S.yuLookTonight, yuHintTonight:S.yuHintTonight,
+    yuLookNight:S.yuLookNight, yuHintTonight:S.yuHintTonight,
     yuActCount:S.yuActCount,
     pendingPhoto:S.pendingPhoto, photoDone:S.photoDone, yuInNight:S.yuInNight,
     yuShown:S.yuShown, newUnlocks:S.newUnlocks
@@ -902,7 +903,9 @@ function load(){
     if(d.yuShown === undefined) d.yuShown = false;
     if(d.yuLookCount === undefined) d.yuLookCount = 0;
     if(d.yuSeen === undefined) d.yuSeen = 0;
-    if(d.yuLookTonight === undefined) d.yuLookTonight = false;
+    if(d.yuLookNight === undefined) d.yuLookNight = -1;
+    if(d.yuLookTonight === true && d.yuLookNight === -1) d.yuLookNight = d.day;  // 旧档：把那晚算作已看
+    if(d.yuLookTonight !== undefined) delete d.yuLookTonight;
     if(d.yuHintTonight === undefined) d.yuHintTonight = false;
     if(d.yuActCount === undefined) d.yuActCount = 0;
     if(d.pendingSettle === undefined) d.pendingSettle = false;
@@ -1050,8 +1053,8 @@ function renderActions(){
 
   /* 门口按钮：层 0「去门口看看」/ 层 2「看向门口」，都是 0AP，每晚各一次 */
   let doorBtn = '';
-  const canLook0 = S.yuState === 0 && S.day >= 6 && !S.yuLookTonight;
-  const canLook2 = S.yuState >= 2 && S.yuState <= 4 && !S.yuLookTonight;
+  const canLook0 = S.yuState === 0 && S.day >= 6 && S.yuLookNight !== S.day;
+  const canLook2 = S.yuState >= 2 && S.yuState <= 4 && S.yuLookNight !== S.day;
   if(canLook0){
     doorBtn = `<button class="btn btn-door" id="btnDoor">去门口看看</button>`;
   }else if(canLook2){
@@ -1426,8 +1429,8 @@ function showYuStageCD(){
 /* ---------- 层 0：去门口看看（0AP，累积查看次数；叙事入口，不参与「一晚一件事」的取舍）---------- */
 function doLookAtDoor(){
   if(S.yuState !== 0) return;
-  if(S.yuLookTonight) { addLog('今晚已经看过了。'); return; }
-  S.yuLookTonight = true;
+  if(S.yuLookNight === S.day) { addLog('今晚已经看过了。'); return; }
+  S.yuLookNight = S.day;
   S.yuLookCount++;
   const texts = [
     '门口没人。地上有个空牛奶瓶，还是温的。',
@@ -1442,20 +1445,25 @@ function doLookAtDoor(){
 function checkYuLookProgress(){
   if(S.yuState !== 0) return;
   if(S.yuLookCount < YU_LOOK_GATE) return;
-  S.yuState = 1;
   S.yuSeen = 0;
-  addLog('门口那个人，今晚又来了。', 'gold');
+  if(S.photoDone){
+    S.yuState = 2;                       // 老照片已看：不再等 45% 那次出场，直接进层 2
+    addLog('你知道他是谁了。', 'gold');
+  }else{
+    S.yuState = 1;
+    addLog('门口那个人，今晚又来了。', 'gold');
+  }
 }
 
 /* ---------- 层 2：看向门口（0AP，叠加在打烊轮之上，不替代它）----------
    取舍是「注意力」不是「资源」：花钱看门口会让玩家拿关店换分寸，
    实测主动 3 次关门率 54.1%——玩家先出局，根本没到结算。
-   每晚限 1 次（yuLookTonight），不推进 yuState（那是打烊轮的职责），
-   不读也不写 yuShown——只自己管 yuLookTonight 与 yuActCount。 */
+   每晚限 1 次（yuLookNight 存夜晚号），不推进 yuState（那是打烊轮的职责），
+   不读也不写 yuShown——只自己管 yuLookNight 与 yuActCount。 */
 function showYuLookDialog(){
   if(S.yuState < 2 || S.yuState > 4) return;
-  if(S.yuLookTonight) return;
-  S.yuLookTonight = true;
+  if(S.yuLookNight === S.day) return;
+  S.yuLookNight = S.day;
 
   const rounds = {
     2: {
@@ -1792,7 +1800,6 @@ function nextDay(){
   if(S.day >= TOTAL_DAYS){ S.pendingSettle = false; clearSave(); startConfession(); return; }
   S.day++;
   S.pendingSettle = false;
-  S.yuLookTonight = false;                 // 每晚重置「今晚看过了」
   rollWeatherAndEvents();
   /* 层 0 暗示：每晚只掷一次，结果存进状态，避免 renderBanner 反复随机导致闪烁 */
   S.yuHintTonight = (S.yuState === 0 && S.day >= 6 && Math.random() < YU_HINT_RATE);
