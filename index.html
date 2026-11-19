@@ -2033,9 +2033,10 @@ function finalEnding(id){
   }else{
     type = 'gone';
   }
-  /* 双结局：自己拿到 HE 时，剩下还有人心动（好感 ≥ 80）→ 先 HE 后 BE。
-     多人同时心动只取好感最高的那一位，其余不播，避免连看三张结局。 */
-  if(type === 'lover'){
+  /* 双结局：选中的这位有结局（HE 或熟客）时，剩下还有人心动（好感 ≥ 80）→ 先播自己再播 BE。
+     多人同时心动只取好感最高的那一位，其余不播，避免连看三张结局。
+     注意门槛是「心动」而不是「HE」：好感 81 的苏妄即使你只和陆走到熟客，他也确实失去了你。 */
+  if(type !== 'gone'){
     const left = CHAR_IDS
       .filter(o => o !== id && S.favors[o] >= LOVER_GATE.favor)
       .sort((a,b) => S.favors[b] - S.favors[a]);
