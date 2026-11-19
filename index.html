@@ -279,6 +279,10 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
 .cc-bio{font-size:12.5px;line-height:1.8;color:#c6d4e6;
   padding:11px;background:#0a1220;border-radius:8px;
   border-left:2px solid #2f4066;margin-bottom:12px}
+.cc-facts{display:flex;flex-direction:column;gap:2px;margin:-4px 0 12px}
+.cc-fact{display:flex;gap:8px;font-size:11px;line-height:1.75}
+.cc-fact span{flex:0 0 26px;color:#5d6f8c;letter-spacing:1px}
+.cc-fact b{flex:1;min-width:0;color:#a3b5cd;font-weight:500}
 .cc-hearts{display:flex;flex-wrap:wrap;gap:6px;margin-top:auto;padding-top:2px}
 .cc-heart{font-size:10.5px;padding:4px 8px;border-radius:12px;
   background:#0e1728;border:1px solid #1d2c48;color:#4a5a72}
@@ -508,9 +512,10 @@ const COL_DATA = {
       rare:'终于说完的旧事',
       endings:{ lover:'两杯热美式', friend:'不再聊哥哥', gone:'两份三明治' } }
   ],
-  yu: { name:'林屿', icon:'🌙', title:'林川的哥哥 · 夜间维修工', color:'#c9b6f2',
+  yu: { name:'林屿', icon:'🌙', title:'林川的哥哥 · 数据恢复工程师', color:'#c9b6f2',
     img:'img/yu.jpg', portrait:'img/yu_big.jpg',
-    bio:'林川的哥哥。躲了五年，只敢在深夜站在便利店门口。<br>会修东西，不太会说自己的事。',
+    bio:'29 岁。五年前牵头做企业数据 SaaS，项目垮了，欠下一辈子都还不完的债，也赔光了家里的积蓄。<br>觉得没脸见学医的弟弟，断了所有联系，留在这座城市靠老本行接散活还债。<br>深色连帽卫衣、黑框眼镜、医用口罩，一只磨旧的黑色电脑包。',
+    facts:[['年龄','29 岁'],['职业','数据恢复 · 旧硬盘修复'],['常买','热牛奶、全麦面包、柠檬硬糖']],
     hearts:['关了灯才走','「我以为他会恨我」','「把店交给你，我放心了」'],
     endings:{ lover:'夜间维修工作室', friend:'门口的灯', gone:'再没人站着' } },
   events: [
@@ -1093,6 +1098,8 @@ function openCharCard(id){
   const tierCol = isYu
     ? (f >= YU_SCORE_LOVER ? '#ff8fa3' : f >= YU_SCORE_FRIEND ? '#ffb36b' : '#a9a0c8')
     : tierColor(f);
+  const factsHtml = (c.facts || []).map(p=>
+    '<div class="cc-fact"><span>' + p[0] + '</span><b>' + p[1] + '</b></div>').join('');
   const box = $('#modalBox');
   box.classList.add('cc-mode');
   box.innerHTML =
@@ -1107,6 +1114,7 @@ function openCharCard(id){
     +     '<div class="cc-title">' + c.title + '</div>'
     +     '<div class="cc-tier" style="color:' + tierCol + '">' + tierLine + '</div>'
     +     '<div class="cc-bio">' + (c.bio || '——') + '</div>'
+    +     (factsHtml ? '<div class="cc-facts">' + factsHtml + '</div>' : '')
     +     '<div class="cc-hearts">' + heartsHtml + '</div>'
     +   '</div>'
     + '</div>';
