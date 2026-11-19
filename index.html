@@ -181,6 +181,7 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
 .col-tip{font-size:9px;color:#7a6a4a;margin-top:3px;line-height:1.3}
 .col-item.is-new .col-tip{color:#a06a10;font-weight:600}
 .col-count{font-size:11px;color:#b8a888;text-align:right;margin-bottom:10px;font-style:italic}
+.col-hint{font-size:10.5px;color:#8a7a5a;margin:-4px 0 12px;line-height:1.6}
 .col-newhint{font-size:11px;color:#ffd08a;margin-bottom:10px;line-height:1.5;
   padding:7px 10px;background:rgba(255,208,138,.08);
   border:1px dashed #8a6030;border-radius:6px}
@@ -192,6 +193,55 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
   text-shadow:0 0 10px rgba(184,159,232,.5)}
 .yu-section .col-item.unlocked{border-color:#8a6ac9;
   background:linear-gradient(160deg,#efe4f7,#e0d0ee)}
+/* 已解锁的格子可以点开看全文 */
+.col-item.unlocked{cursor:pointer}
+.col-item.unlocked:active{transform:rotate(0deg) scale(.97);
+  box-shadow:0 1px 4px rgba(0,0,0,.5)}
+/* 回忆册 · 详情页 */
+.col-detail{padding:2px 2px 0}
+.col-detail-tag{font-size:10px;letter-spacing:3px;color:#a08a5c;text-align:center;margin-bottom:7px}
+.col-detail-name{font-size:18px;font-weight:600;color:#f0e2c2;text-align:center;
+  margin-bottom:3px;letter-spacing:1px}
+.col-detail-sub{font-size:11.5px;color:#9a8f78;text-align:center;margin-bottom:13px}
+.col-detail-body{font-size:12.5px;line-height:2;color:#3a2e1c;
+  background:linear-gradient(160deg,#f7f0df,#ece0c8);
+  border:1px solid #c9b48a;border-radius:8px;padding:13px 14px;
+  max-height:50vh;overflow-y:auto;
+  box-shadow:0 3px 12px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.5)}
+.col-detail .m-btn{margin-top:14px;background:linear-gradient(135deg,#3a2a18,#5a3d1f);
+  border-color:#8a6030;color:#ffd08a}
+.col-detail-note{font-size:12px;line-height:1.9;color:#bdad8e;margin-top:11px;
+  padding-left:10px;border-left:2px solid #8a6a3a;font-style:italic}
+/* 林屿解锁卡 */
+.yu-unlock{text-align:center}
+.yu-unlock-tag{font-size:9.5px;letter-spacing:3px;color:#8a7fb5;margin-bottom:6px}
+.yu-unlock-name{font-size:22px;font-weight:700;letter-spacing:6px;color:#d9c9ff;
+  margin-bottom:12px;text-shadow:0 0 16px rgba(160,130,240,.55)}
+.yu-unlock-img{width:100%;max-width:220px;margin:0 auto 13px;border-radius:12px;overflow:hidden;
+  border:1px solid #3b3060;
+  background:radial-gradient(ellipse at 50% 30%,rgba(150,120,255,.18),transparent 70%),#0a1220}
+.yu-unlock-img img{width:100%;display:block}
+.yu-unlock-txt{font-size:13px;color:#ffd08a;line-height:1.8;margin-bottom:16px}
+.yu-unlock-txt small{display:block;margin-top:7px;font-size:11.5px;color:#8fa3bd;line-height:1.8}
+/* 林屿出场对话：左立绘 + 右文字 */
+.m-face{display:flex;gap:11px;align-items:flex-start}
+.m-face-img{flex:0 0 88px;width:88px;height:132px;border-radius:9px;overflow:hidden;
+  background:#0a1220;border:1px solid #24344f}
+.m-face-img img{width:100%;height:100%;object-fit:cover;object-position:center top;display:block}
+.m-face-txt{flex:1;min-width:0}
+/* 夜晚界面：门口的林屿 */
+.yu-chip{display:flex;align-items:center;gap:11px;
+  background:linear-gradient(180deg,#151026,#0d0a18);border-color:#3b3060}
+.yu-chip .avatar{border:1px solid #4a3d78}
+.yu-chip-main{flex:1;min-width:0}
+.yu-chip-sub{font-size:10.5px;color:#9a8fc0;margin-top:3px}
+.yu-chip-tag{font-size:9px;color:#c9b6f2;border:1px solid #4a3d78;border-radius:8px;
+  padding:1px 5px;margin-left:6px;vertical-align:1px}
+.yu-chip-go{font-size:11px;color:#c9b6f2;flex:none}
+@media (max-width:380px){
+  .m-face-img{flex-basis:74px;width:74px;height:111px}
+  .yu-chip-go{display:none}
+}
 
 /* ================= 人物大卡（点头像打开） ================= */
 .modal-box.cc-mode{background:none;border:none;box-shadow:none;padding:0;
@@ -458,7 +508,9 @@ const COL_DATA = {
       rare:'终于说完的旧事',
       endings:{ lover:'两杯热美式', friend:'不再聊哥哥', gone:'两份三明治' } }
   ],
-  yu: { name:'林屿', icon:'🌙',
+  yu: { name:'林屿', icon:'🌙', title:'林川的哥哥 · 夜间维修工', color:'#c9b6f2',
+    img:'img/yu.jpg', portrait:'img/yu_big.jpg',
+    bio:'林川的哥哥。躲了五年，只敢在深夜站在便利店门口。<br>会修东西，不太会说自己的事。',
     hearts:['关了灯才走','「我以为他会恨我」','「把店交给你，我放心了」'],
     endings:{ lover:'夜间维修工作室', friend:'门口的灯', gone:'再没人站着' } },
   events: [
@@ -467,6 +519,18 @@ const COL_DATA = {
     { id:'storm',   name:'暴雨封路', icon:'🌧' },
     { id:'inspect', name:'店长检查', icon:'📋' }
   ]
+};
+
+/* 林屿的心事与结局正文：对话框和回忆册共用这一份，避免两处文案走样 */
+const YU_HEART_TEXTS = [
+  '凌晨五点，他推门进来，头一次没戴口罩，黑框眼镜上沾了点晨雾。<br><br>他有点不自在地摸了摸下颌，攥紧了电脑包的背带，眼神有些躲闪。',
+  '他坐在靠窗的位置，牛奶喝了一半，忽然开口「林川…… 他有没有提过我？」问完又立刻补充，「要是没提过也没关系。」<br><br>他说起五年前的事，声音很轻。「我以为他会恨我。」',
+  '店里监控坏了两天，他顺路过来，半小时就调试好了。你要给他维修费，他摆摆手坚决不肯要。<br><br>「举手之劳。」他说完，笑了一下。'
+];
+const YU_ENDINGS = {
+  lover:'他还清最后一笔债务那天，把工作室的注册地址填在了便利店隔壁。<br><br>不再戴口罩压低帽檐，他会在凌晨五点准时推门进来，靠在吧台边等你换班。<br><br>「以后不用躲着了」，他碰了碰你的杯子，声音很轻却很稳，<br><br>「也不用远远看着了。」<br><br>城市的清晨里，三个人的影子都落得安稳。',
+  friend:'他还完了所有债，不用再躲躲藏藏。<br><br>偶尔会来店里坐会儿，碰到林川也能自然打个招呼。<br><br>每次来都买常温牛奶，站在门口喝半瓶，剩下的带走。<br><br>便利店的灯亮着，他就觉得踏实。',
+  gone:'他悄无声息地离开了这座城市。<br><br>便利店的灯还是亮的，但门口再也没有徘徊的身影。<br><br>你偶尔会想起，他柠檬味的气息。'
 };
 
 const CHARS = {
@@ -884,6 +948,7 @@ function renderCollection(showNew){
   let html = `<div class="m-title">回 忆 册</div>`;
   const st = collectionStats();
   html += `<div class="col-count">已收集 ${st.got} / ${st.total}</div>`;
+  html += `<div class="col-hint">点开亮起的格子，可以看结局正文与心事全文</div>`;
   if(nu){
     const newCount = Object.keys(nu.hearts).length + Object.keys(nu.rare).length
       + Object.keys(nu.endings).length + Object.keys(nu.events).length
@@ -896,7 +961,7 @@ function renderCollection(showNew){
     c.hearts.forEach((name,i)=>{
       const ok = COL.hearts[c.id] && COL.hearts[c.id][i];
       const isNew = nu && nu.hearts[c.id+'_'+i];
-      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}"${ok?' data-k="heart:'+c.id+':'+i+'"':''}>
         <div class="col-icon">${ok?'💭':'❔'}</div>
         <div class="col-name">${ok?name:'？？？'}</div>
         <div class="col-tip">心事 ${i+1}${isNew?' · 新':''}</div>
@@ -914,7 +979,7 @@ function renderCollection(showNew){
       const ok = COL.endings[key];
       const isNew = nu && nu.endings[key];
       const label = k==='lover'?'恋人':k==='friend'?'好友':'错过';
-      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+      html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}"${ok?' data-k="end:'+c.id+':'+k+'"':''}>
         <div class="col-icon">${ok?(k==='lover'?'💗':k==='friend'?'🤝':'🍂'):'❔'}</div>
         <div class="col-name">${ok?c.endings[k]:'？？？'}</div>
         <div class="col-tip">结局·${label}${isNew?' · 新':''}</div>
@@ -927,7 +992,7 @@ function renderCollection(showNew){
   COL_DATA.yu.hearts.forEach((name,i)=>{
     const ok = COL.yuHearts[i];
     const isNew = nu && nu.yuHearts[i];
-    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}"${ok?' data-k="heart:yu:'+i+'"':''}>
       <div class="col-icon">${ok?'💭':'❔'}</div>
       <div class="col-name">${ok?name:'？？？'}</div>
       <div class="col-tip">心事 ${i+1}${isNew?' · 新':''}</div>
@@ -938,7 +1003,7 @@ function renderCollection(showNew){
     const ok = COL.endings[key];
     const isNew = nu && nu.endings[key];
     const label = k==='lover'?'恋人':k==='friend'?'好友':'错过';
-    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}">
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}"${ok?' data-k="end:yu:'+k+'"':''}>
       <div class="col-icon">${ok?(k==='lover'?'💗':k==='friend'?'🤝':'🍂'):'❔'}</div>
       <div class="col-name">${ok?COL_DATA.yu.endings[k]:'？？？'}</div>
       <div class="col-tip">结局·${label}${isNew?' · 新':''}</div>
@@ -961,21 +1026,73 @@ function renderCollection(showNew){
   html += `<button class="m-btn" id="colClose" style="margin-top:8px">返回</button>`;
   box.innerHTML = html;
   box.querySelector('#colClose').onclick = ()=>{ $('#modal').classList.remove('on'); box.classList.remove('col-mode'); };
+  /* 已解锁的格子都能点开：结局看正文，心事看全文 */
+  box.querySelectorAll('.col-item[data-k]').forEach(it=>{
+    it.onclick = ()=>{
+      const p = String(it.dataset.k || '').split(':');
+      if(p.length < 3) return;
+      openColDetail(p[0], p[1], p[2]);
+    };
+  });
+  $('#modal').classList.add('on');
+}
+
+/* 回忆册 · 详情：结局正文与心事全文都从游戏数据里取，不另存一份副本 */
+function openColDetail(kind, id, key){
+  const isYu = id === 'yu';
+  const meta = isYu ? COL_DATA.yu : COL_DATA.chars.filter(x=>x.id === id)[0];
+  if(!meta) return;
+  let tag, title, sub, body, note = '';
+  if(kind === 'heart'){
+    const i = parseInt(key, 10);
+    if(isNaN(i) || !meta.hearts[i]) return;
+    tag   = '心 事 · 第 ' + (i+1) + ' 段';
+    title = meta.name;
+    sub   = meta.hearts[i];
+    body  = isYu ? YU_HEART_TEXTS[i] : ((CHARS[id].heartEvents[i] || {}).s || '');
+    /* 选完之后那句总结，只有四人组有；单独排一行，别混进正文 */
+    note  = isYu ? '' : (CHARS[id].hearts[i] || '');
+  }else{
+    const labelMap = { lover:'恋人', friend:'好友', gone:'错过' };
+    if(!meta.endings[key]) return;
+    tag   = '结 局 · ' + (labelMap[key] || '');
+    title = meta.endings[key];
+    sub   = meta.name;
+    body  = isYu ? YU_ENDINGS[key] : CHARS[id].endings[key];
+  }
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="col-detail">
+      <div class="col-detail-tag">${tag}</div>
+      <div class="col-detail-name">${title}</div>
+      <div class="col-detail-sub">${sub}</div>
+      <div class="col-detail-body">${body || '——'}</div>
+      ${note ? '<div class="col-detail-note">' + note + '</div>' : ''}
+      <button class="m-btn" id="colBack">返 回 回 忆 册</button>
+    </div>`;
+  box.querySelector('#colBack').onclick = ()=> renderCollection(false);
   $('#modal').classList.add('on');
 }
 
 /* 点头像 → 人物大卡（立绘 + 简介 + 心事收集） */
 function openCharCard(id){
-  const c = CHARS[id];
+  const isYu = id === 'yu';
+  const c = isYu ? COL_DATA.yu : CHARS[id];   /* 林屿不在 CHARS 里，走隐藏角色那份数据 */
   if(!c) return;
-  const meta = COL_DATA.chars.filter(x=>x.id===id)[0];
-  const names = meta ? meta.hearts : [];
+  /* 短标签在 COL_DATA 里（CHARS[id].hearts 是事后那句总结，不是标签） */
+  const meta = isYu ? COL_DATA.yu : COL_DATA.chars.filter(x=>x.id===id)[0];
+  const names = (meta && meta.hearts) || [];
   const heartsHtml = names.map((n,i)=>{
-    const ok = COL.hearts[id] && COL.hearts[id][i];
+    const ok = isYu ? COL.yuHearts[i] : (COL.hearts[id] && COL.hearts[id][i]);
     return '<span class="cc-heart ' + (ok?'on':'') + '">'
          + (ok ? '💭 ' + n : '❔ 心事 ' + (i+1)) + '</span>';
   }).join('');
-  const f = S.favors[id] || 0;
+  /* 林屿不走好感体系，显示「分寸」；阈值与他自己的结局判定一致 */
+  const f = isYu ? (S.yuScore || 0) : (S.favors[id] || 0);
+  const tierLine = isYu ? '隐藏角色 · 分寸 ' + f : tierOf(f) + ' · 好感 ' + f;
+  const tierCol = isYu
+    ? (f >= YU_SCORE_LOVER ? '#ff8fa3' : f >= YU_SCORE_FRIEND ? '#ffb36b' : '#a9a0c8')
+    : tierColor(f);
   const box = $('#modalBox');
   box.classList.add('cc-mode');
   box.innerHTML =
@@ -988,8 +1105,7 @@ function openCharCard(id){
     +   '<div class="cc-info">'
     +     '<div class="cc-name" style="color:' + c.color + '">' + c.name + '</div>'
     +     '<div class="cc-title">' + c.title + '</div>'
-    +     '<div class="cc-tier" style="color:' + tierColor(f) + '">'
-    +       tierOf(f) + ' · 好感 ' + f + '</div>'
+    +     '<div class="cc-tier" style="color:' + tierCol + '">' + tierLine + '</div>'
     +     '<div class="cc-bio">' + (c.bio || '——') + '</div>'
     +     '<div class="cc-hearts">' + heartsHtml + '</div>'
     +   '</div>'
@@ -1198,6 +1314,21 @@ function renderNight(){
       </div>`;
     ga.appendChild(card);
   });
+  /* 林屿不是 S.present 里的客人，他是门口的人：单给一张可点的卡，
+     头像点开就是完整人物卡，不然玩家整局看不到他的脸。 */
+  if(S.yuState >= 2){
+    const chip = el('div','guest yu-chip');
+    chip.innerHTML = `
+      <div class="avatar" data-char="yu" style="background:#1a1a2e">
+        <img src="${COL_DATA.yu.img}" alt="林屿">
+      </div>
+      <div class="yu-chip-main">
+        <div class="g-name">林屿<span class="yu-chip-tag">隐藏</span></div>
+        <div class="yu-chip-sub">站在门口 · 分寸 ${S.yuScore}</div>
+      </div>
+      <div class="yu-chip-go">看立绘 ›</div>`;
+    ga.appendChild(chip);
+  }
   ga.querySelectorAll('button[data-id]').forEach(b=>{
     b.onclick = ()=>openDialog(b.dataset.id, b.dataset.type);
   });
@@ -1451,6 +1582,33 @@ function resolveDrunk(kind){
   addLog(msg, tidyDelta < 0 ? 'down' : 'up');
 }
 
+/* 林屿每次出场都带一张小立绘：2:3 竖图，与弹窗文字左右并排。
+   他不是客人，没有客人卡，所以立绘要跟着对话走，玩家才看得见他的人。 */
+function yuFace(text){
+  return '<div class="m-scene m-face">'
+    + '<div class="m-face-img"><img src="' + COL_DATA.yu.portrait + '" alt="林屿"></div>'
+    + '<div class="m-face-txt">' + text + '</div>'
+  + '</div>';
+}
+
+/* 解锁卡：一张大立绘 + 「恭喜解锁」+ 一句引导（告诉他以后能点头像看卡） */
+function showYuUnlock(next){
+  const box = $('#modalBox');
+  box.innerHTML = `
+    <div class="yu-unlock">
+      <div class="yu-unlock-tag">HIDDEN CHARACTER</div>
+      <div class="yu-unlock-name">林 屿</div>
+      <div class="yu-unlock-img"><img src="${COL_DATA.yu.portrait}" alt="林屿"></div>
+      <div class="yu-unlock-txt">恭喜解锁隐藏人物 · 林屿<small>他会在每个打烊前站在门口。点夜晚界面门口的头像，可以看他的立绘与心事。</small></div>
+      <button class="m-btn" id="mOk">继 续</button>
+    </div>`;
+  box.querySelector('#mOk').onclick = once(()=>{
+    $('#modal').classList.remove('on');
+    next && next();
+  });
+  $('#modal').classList.add('on');
+}
+
 /* ---------- 林屿 · 层 1：见到但不可攻略（yuState = 1）---------- */
 function showYuStageB(){
   if(S.yuState !== 1) return false;
@@ -1465,7 +1623,7 @@ function showYuStageB(){
   const idx = Math.min(S.yuSeen - 1, 2);
   box.innerHTML = `
     <div class="m-title">门口的人</div>
-    <div class="m-scene">${texts[idx]}</div>
+    ${yuFace(texts[idx])}
     <button class="m-btn" id="mOk">继续</button>`;
   box.querySelector('#mOk').onclick = once(()=>{
     $('#modal').classList.remove('on');
@@ -1521,7 +1679,7 @@ function showYuStageCD(){
     const box = $('#modalBox');
     box.innerHTML = `
       <div class="m-title">门口的人 · ${day}/3</div>
-      <div class="m-scene">${texts[day-1]}</div>
+      ${yuFace(texts[day-1])}
       <div id="optWrap"></div>`;
     const ow = box.querySelector('#optWrap');
     shuffle([...opts[day-1]]).forEach(opt=>{
@@ -1547,7 +1705,7 @@ function showYuStageCD(){
     const box = $('#modalBox');
     box.innerHTML = `
       <div class="m-title">第四次</div>
-      <div class="m-scene">他推门进来，没有走向货架，而是在你面前站定。<br>「……我是林川的哥哥。」<br>他摘下口罩。照片上曾经并肩的两张年轻面孔，现在有一张就在你的面前。</div>
+      ${yuFace('他推门进来，没有走向货架，而是在你面前站定。<br>「……我是林川的哥哥。」<br>他摘下口罩。照片上曾经并肩的两张年轻面孔，现在有一张就在你的面前。')}
       <button class="m-btn" id="mOk">继续</button>`;
     box.querySelector('#mOk').onclick = once(()=>{
       $('#modal').classList.remove('on');
@@ -1557,8 +1715,11 @@ function showYuStageCD(){
       S.yuShown = true;
       addLog('林屿正式解锁。', 'gold');
       queueYuHearts();
-      if(S.yuHeartQueue.length > 0){ showYuHeart(); }
-      else continueClose();
+      /* 解锁这一下必须让玩家看见他的脸：单独一张卡，之后才接心事/打烊 */
+      showYuUnlock(()=>{
+        if(S.yuHeartQueue.length > 0){ showYuHeart(); }
+        else continueClose();
+      });
     });
     $('#modal').classList.add('on');
     return true;
@@ -1574,7 +1735,7 @@ function showYuStageCD(){
     const box = $('#modalBox');
     box.innerHTML = `
       <div class="m-title">门口</div>
-      <div class="m-scene">${msg}<br><span style="font-size:11px;color:#8fd6a8">分寸值 +1（${S.yuScore}）</span></div>
+      ${yuFace(msg + '<br><span style="font-size:11px;color:#8fd6a8">分寸值 +1（' + S.yuScore + '）</span>')}
       <button class="m-btn" id="mOk">继续</button>`;
     box.querySelector('#mOk').onclick = once(()=>{
       $('#modal').classList.remove('on');
@@ -1656,7 +1817,7 @@ function showYuLookDialog(){
   const box = $('#modalBox');
   box.innerHTML = `
     <div class="m-title">看向门口</div>
-    <div class="m-scene">${d.s}</div>
+    ${yuFace(d.s)}
     <div id="optWrap"></div>`;
   const ow = box.querySelector('#optWrap');
   shuffle([...d.o]).forEach(opt=>{
@@ -1690,15 +1851,10 @@ function queueYuHearts(){
 }
 function showYuHeart(afterNight){
   const idx = S.yuHeartQueue.shift();
-  const texts = [
-    '凌晨五点，他推门进来，头一次没戴口罩，黑框眼镜上沾了点晨雾。<br><br>他有点不自在地摸了摸下颌，攥紧了电脑包的背带，眼神有些躲闪。',
-    '他坐在靠窗的位置，牛奶喝了一半，忽然开口「林川…… 他有没有提过我？」问完又立刻补充，「要是没提过也没关系。」<br><br>他说起五年前的事，声音很轻。「我以为他会恨我。」',
-    '店里监控坏了两天，他顺路过来，半小时就调试好了。你要给他维修费，他摆摆手坚决不肯要。<br><br>「举手之劳。」他说完，笑了一下。'
-  ];
   const box = $('#modalBox');
   box.innerHTML = `
     <div class="m-title">林屿 · 心事 ${idx+1}</div>
-    <div class="m-scene">${texts[idx]}</div>
+    ${yuFace(YU_HEART_TEXTS[idx])}
     <button class="m-btn" id="mOk">继续</button>`;
   box.querySelector('#mOk').onclick = ()=>{
     $('#modal').classList.remove('on');
@@ -2086,15 +2242,10 @@ function showEnding(type, charId, otherId, next){
   }else if(type === 'none'){
     title = '谁都没选';
     body  = '三十个夜晚过去，店还开着。<br><br>熟客来了又走，你始终守在收银台后面，没和谁走得更近。<br><br>关店的时候天快亮了，卷帘门拉下来的声音很轻，像什么都没发生过。';
-  }else if(type === 'yu_lover'){
+  }else if(type === 'yu_lover' || type === 'yu_friend' || type === 'yu_gone'){
+    /* 正文与回忆册共用 YU_ENDINGS，改一处两处同步 */
     title = '林屿';
-    body  = '他还清最后一笔债务那天，把工作室的注册地址填在了便利店隔壁。<br><br>不再戴口罩压低帽檐，他会在凌晨五点准时推门进来，靠在吧台边等你换班。<br><br>「以后不用躲着了」，他碰了碰你的杯子，声音很轻却很稳，<br><br>「也不用远远看着了。」<br><br>城市的清晨里，三个人的影子都落得安稳。';
-  }else if(type === 'yu_friend'){
-    title = '林屿';
-    body  = '他还完了所有债，不用再躲躲藏藏。<br><br>偶尔会来店里坐会儿，碰到林川也能自然打个招呼。<br><br>每次来都买常温牛奶，站在门口喝半瓶，剩下的带走。<br><br>便利店的灯亮着，他就觉得踏实。';
-  }else if(type === 'yu_gone'){
-    title = '林屿';
-    body  = '他悄无声息地离开了这座城市。<br><br>便利店的灯还是亮的，但门口再也没有徘徊的身影。<br><br>你偶尔会想起，他柠檬味的气息。';
+    body  = YU_ENDINGS[type.slice(3)];
   }else{
     const c = CHARS[charId];
     title = c.name;
