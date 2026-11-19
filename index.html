@@ -948,7 +948,7 @@ function renderCollection(showNew){
   let html = `<div class="m-title">回 忆 册</div>`;
   const st = collectionStats();
   html += `<div class="col-count">已收集 ${st.got} / ${st.total}</div>`;
-  html += `<div class="col-hint">点开亮起的格子，可以看结局正文与心事全文</div>`;
+  html += `<div class="col-hint">点开亮起的格子，可以看结局、心事与稀有事件的全文</div>`;
   if(nu){
     const newCount = Object.keys(nu.hearts).length + Object.keys(nu.rare).length
       + Object.keys(nu.endings).length + Object.keys(nu.events).length
@@ -969,7 +969,7 @@ function renderCollection(showNew){
     });
     const rareOk = COL.rare[c.id];
     const rareNew = nu && nu.rare[c.id];
-    html += `<div class="${cls('col-item '+(rareOk?'unlocked':'locked'), rareNew)}">
+    html += `<div class="${cls('col-item '+(rareOk?'unlocked':'locked'), rareNew)}"${rareOk?' data-k="rare:'+c.id+':0"':''}>
       <div class="col-icon">${rareOk?'🎁':'❔'}</div>
       <div class="col-name">${rareOk?c.rare:'？？？'}</div>
       <div class="col-tip">稀有${rareNew?' · 新':''}</div>
@@ -1026,7 +1026,7 @@ function renderCollection(showNew){
   html += `<button class="m-btn" id="colClose" style="margin-top:8px">返回</button>`;
   box.innerHTML = html;
   box.querySelector('#colClose').onclick = ()=>{ $('#modal').classList.remove('on'); box.classList.remove('col-mode'); };
-  /* 已解锁的格子都能点开：结局看正文，心事看全文 */
+  /* 已解锁的格子都能点开：结局看正文，心事看全文，稀有事件看经过 */
   box.querySelectorAll('.col-item[data-k]').forEach(it=>{
     it.onclick = ()=>{
       const p = String(it.dataset.k || '').split(':');
@@ -1043,7 +1043,15 @@ function openColDetail(kind, id, key){
   const meta = isYu ? COL_DATA.yu : COL_DATA.chars.filter(x=>x.id === id)[0];
   if(!meta) return;
   let tag, title, sub, body, note = '';
-  if(kind === 'heart'){
+  if(kind === 'rare'){
+    /* 稀有事件：格子显示短标签，正文取 CHARS[x].rare，和心事同一套「短标签 + 全文」 */
+    if(!meta.rare) return;
+    if(!CHARS[id] || !CHARS[id].rare) return;
+    tag   = '稀 有 · 事 件';
+    title = meta.rare;
+    sub   = meta.name;
+    body  = CHARS[id].rare;
+  }else if(kind === 'heart'){
     const i = parseInt(key, 10);
     if(isNaN(i) || !meta.hearts[i]) return;
     tag   = '心 事 · 第 ' + (i+1) + ' 段';
