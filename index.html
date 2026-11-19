@@ -12,19 +12,28 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
 #app{width:100%;max-width:480px;height:100dvh;display:flex;flex-direction:column;
   background:#0a0f1a;position:relative}
 #titleScreen{position:absolute;inset:0;display:none;flex-direction:column;
-  align-items:center;justify-content:center;padding:32px 24px;z-index:40;
-  background:radial-gradient(ellipse at 50% 28%,rgba(255,190,110,.10),transparent 60%),
-             linear-gradient(180deg,#05090f,#0a1220 60%,#0e1626)}
-#titleScreen.on{display:flex;animation:fadein .5s}
-.t-title{font-size:26px;font-weight:600;letter-spacing:5px;color:#ffd08a;margin-bottom:6px;text-align:center}
-.t-sub{font-size:12px;color:#6d80a0;letter-spacing:3px;margin-bottom:44px}
-.t-btn{width:100%;max-width:260px;background:#131d30;border:1px solid #2f4066;
-  border-radius:9px;padding:15px;font-size:14px;color:#dfe8f5;font-family:inherit;
-  cursor:pointer;margin-bottom:11px;transition:.15s;letter-spacing:1px}
-.t-btn:active{background:#1e2c48;transform:scale(.98)}
-.t-btn.primary{background:linear-gradient(135deg,#3a2a18,#5a3d1f);color:#ffd08a;
-  border-color:#6b4a24;font-weight:600}
-.t-hint{font-size:11px;color:#4a5a72;margin-top:16px;text-align:center;line-height:1.7}
+  align-items:center;justify-content:flex-end;padding:32px 24px 7vh;z-index:40;
+  background:url('img/cover.jpg') center/cover no-repeat,#0a0f1a;overflow:hidden}
+#titleScreen.on{display:flex;animation:fadein .6s}
+#titleScreen::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 50% 32%,transparent 30%,rgba(0,0,0,.55) 100%),
+             linear-gradient(to top,rgba(4,7,13,.97) 0%,rgba(4,7,13,.86) 22%,rgba(4,7,13,.42) 46%,rgba(4,7,13,.12) 68%,rgba(4,7,13,.35) 100%)}
+#titleScreen > *{position:relative;z-index:1}
+.t-title{font-size:30px;font-weight:700;letter-spacing:8px;color:#ffd08a;margin-bottom:6px;
+  text-align:center;text-shadow:0 0 18px rgba(255,190,110,.75),0 2px 6px rgba(0,0,0,.85)}
+.t-sub{font-size:11px;color:#cbb99a;letter-spacing:6px;margin-bottom:46px;
+  text-shadow:0 1px 4px rgba(0,0,0,.85)}
+.t-btn{width:100%;max-width:260px;background:rgba(14,20,32,.68);
+  border:1px solid rgba(108,126,158,.5);border-radius:10px;padding:15px;
+  font-size:14px;color:#e2ebf8;font-family:inherit;cursor:pointer;
+  margin-bottom:11px;transition:.18s;letter-spacing:2px;
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
+.t-btn:active{background:rgba(30,44,72,.9);transform:scale(.98)}
+.t-btn.primary{background:linear-gradient(135deg,rgba(74,53,26,.94),rgba(120,82,38,.94));
+  color:#ffd9a2;border-color:#a87a3c;font-weight:600;
+  box-shadow:0 4px 20px rgba(255,190,110,.22)}
+.t-hint{font-size:11px;color:#b8c6d8;margin-top:16px;text-align:center;line-height:1.7;
+  text-shadow:0 1px 4px rgba(0,0,0,.85)}
 #hud{flex:none;background:#070c16;border-bottom:1px solid #16213a;padding:8px 12px;
   font-size:11.5px;color:#7f8fa8;line-height:1.8}
 #hud .row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
@@ -41,8 +50,13 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
   animation:gin .45s ease both}
 @keyframes gin{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .g-top{display:flex;align-items:center;gap:9px;margin-bottom:7px}
-.avatar{width:36px;height:36px;border-radius:50%;flex:none;display:flex;
-  align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#0a0f1a}
+.avatar{width:36px;height:36px;border-radius:50%;flex:none;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;font-size:14px;
+  font-weight:600;color:#0a0f1a;position:relative;
+  box-shadow:0 0 0 2px rgba(255,255,255,.12),0 0 10px rgba(255,200,100,.25)}
+.avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.avatar[data-char]{cursor:pointer;transition:.15s}
+.avatar[data-char]:active{transform:scale(.92)}
 .g-name{font-size:14px;font-weight:600;color:#f0f5ff}
 .g-title{font-size:10.5px;color:#5f728c;margin-top:1px}
 .g-favor{margin-left:auto;text-align:right;flex:none}
@@ -127,27 +141,77 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
 .end-after .x{font-size:12px;color:#7d8ca3;line-height:1.8}
 .end-actions{display:flex;gap:8px;margin-top:16px}
 .end-actions .m-btn{flex:1;margin:0}
-.col-section{margin-bottom:16px}
-.col-sec-title{font-size:12px;color:#ffd08a;letter-spacing:2px;font-weight:600;
-  margin-bottom:8px;padding-left:7px;border-left:2px solid #6b4a24}
-.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
-.col-item{background:#0a1220;border:1px solid #1d2c48;border-radius:7px;
-  padding:9px 7px;text-align:center;min-height:62px;
+/* ================= 回忆册：相册 / 手账 ================= */
+.modal-box.col-mode{background:#12100c;border-color:#3a3050;
+  background-image:url("data:image/svg+xml;utf8,%3Csvg%20xmlns=%22http://www.w3.org/2000/svg%22%20width=%22120%22%20height=%22120%22%3E%3Cfilter%20id=%22n%22%3E%3CfeTurbulence%20type=%22fractalNoise%22%20baseFrequency=%22.9%22%20numOctaves=%222%22/%3E%3CfeColorMatrix%20values=%220%200%200%200%20.06%200%200%200%200%20.05%200%200%200%200%20.03%200%200%200%20.35%200%22/%3E%3C/filter%3E%3Crect%20width=%22120%22%20height=%22120%22%20filter=%22url(%23n)%22/%3E%3C/svg%3E");
+  background-repeat:repeat}
+.col-section{margin-bottom:18px;position:relative}
+.col-sec-title{font-size:12.5px;color:#ffd08a;letter-spacing:3px;font-weight:600;
+  margin-bottom:10px;padding-left:9px;border-left:3px solid #b8863b;
+  text-shadow:0 0 10px rgba(255,190,110,.4)}
+.col-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.col-item{background:linear-gradient(160deg,#f5ecd7,#e8dcc0);
+  border:1px solid #b8a888;border-radius:6px;
+  padding:11px 7px;text-align:center;min-height:78px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  transition:.2s}
-.col-item.locked{opacity:.35}
-.col-item.unlocked{border-color:#3a4d70}
-.col-item.is-new{border-color:#ffd08a;box-shadow:0 0 0 1px rgba(255,208,138,.4),
-  inset 0 0 16px rgba(255,208,138,.1);animation:newglow 2s ease-in-out infinite}
-@keyframes newglow{0%,100%{box-shadow:0 0 0 1px rgba(255,208,138,.4),inset 0 0 16px rgba(255,208,138,.1)}
-  50%{box-shadow:0 0 0 1px rgba(255,208,138,.8),inset 0 0 20px rgba(255,208,138,.2)}}
-.col-icon{font-size:17px;margin-bottom:4px;line-height:1}
-.col-name{font-size:10px;color:#c6d4e6;line-height:1.3}
-.col-item.locked .col-name{color:#4a5a72}
-.col-tip{font-size:9px;color:#5f728c;margin-top:2px;line-height:1.3}
-.col-item.is-new .col-tip{color:#ffd08a}
-.col-count{font-size:11px;color:#6d80a0;text-align:right;margin-bottom:10px}
-.col-newhint{font-size:10.5px;color:#ffd08a;margin-bottom:10px;line-height:1.5}
+  transition:.25s;position:relative;
+  box-shadow:0 3px 10px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.5);
+  transform:rotate(-1.2deg)}
+.col-item:nth-child(even){transform:rotate(1.2deg)}
+.col-item.locked{opacity:.55;filter:grayscale(.6);
+  background:linear-gradient(160deg,#2a2820,#22201a);
+  border-color:#3a3830;box-shadow:none}
+.col-item.locked .col-name{color:#6b6558}
+.col-item.unlocked{border-color:#c9a86a}
+.col-item.is-new{border-color:#ffd08a;
+  box-shadow:0 0 0 2px rgba(255,208,138,.5),0 4px 16px rgba(255,190,110,.35);
+  animation:newglow 2s ease-in-out infinite}
+@keyframes newglow{0%,100%{box-shadow:0 0 0 2px rgba(255,208,138,.4),0 4px 14px rgba(255,190,110,.25)}
+  50%{box-shadow:0 0 0 3px rgba(255,208,138,.85),0 6px 22px rgba(255,190,110,.5)}}
+.col-icon{font-size:18px;margin-bottom:5px;line-height:1}
+.col-name{font-size:10px;color:#3a2e1c;line-height:1.35;font-weight:500}
+.col-tip{font-size:9px;color:#7a6a4a;margin-top:3px;line-height:1.3}
+.col-item.is-new .col-tip{color:#a06a10;font-weight:600}
+.col-count{font-size:11px;color:#b8a888;text-align:right;margin-bottom:10px;font-style:italic}
+.col-newhint{font-size:11px;color:#ffd08a;margin-bottom:10px;line-height:1.5;
+  padding:7px 10px;background:rgba(255,208,138,.08);
+  border:1px dashed #8a6030;border-radius:6px}
+.modal-box.col-mode .m-title:first-child{text-align:center;letter-spacing:6px;
+  font-size:16px;margin-bottom:14px;text-shadow:0 0 14px rgba(255,190,110,.5)}
+.modal-box.col-mode #colClose{background:linear-gradient(135deg,#3a2a18,#5a3d1f);
+  border-color:#8a6030;color:#ffd08a}
+.yu-section .col-sec-title{border-left-color:#b89fe8;color:#c8b8ff;
+  text-shadow:0 0 10px rgba(184,159,232,.5)}
+.yu-section .col-item.unlocked{border-color:#8a6ac9;
+  background:linear-gradient(160deg,#efe4f7,#e0d0ee)}
+
+/* ================= 人物大卡（点头像打开） ================= */
+.modal-box.cc-mode{background:none;border:none;box-shadow:none;padding:0;
+  max-width:400px;overflow-y:auto;overflow-x:visible}
+.char-card{position:relative;width:100%;max-width:400px;
+  background:linear-gradient(180deg,#0d1626,#0a1220);
+  border:1px solid #24344f;border-radius:14px;padding:16px 16px 18px;
+  animation:pop .3s cubic-bezier(.2,.8,.3,1)}
+.cc-close{position:absolute;top:6px;right:8px;width:32px;height:32px;
+  border:none;background:rgba(6,10,18,.55);color:#93a6c4;font-size:22px;
+  cursor:pointer;line-height:1;border-radius:50%;z-index:2}
+.cc-close:active{background:#1a253c;color:#dfe8f5}
+.cc-portrait{width:100%;height:min(300px,40vh);border-radius:10px;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:14px;background:#0a1220}
+.cc-portrait img{width:100%;height:100%;object-fit:cover;object-position:center 18%;display:block}
+.cc-ph{font-size:40px;font-weight:700;color:#2f4066;letter-spacing:4px}
+.cc-name{font-size:21px;font-weight:700;letter-spacing:3px;margin-bottom:3px}
+.cc-title{font-size:12px;color:#8fa3bd;margin-bottom:10px;letter-spacing:1px}
+.cc-tier{font-size:12px;font-weight:600;margin-bottom:12px;letter-spacing:1px}
+.cc-bio{font-size:12.5px;line-height:1.85;color:#c6d4e6;
+  padding:11px 12px;background:#0a1220;border-radius:8px;
+  border-left:2px solid #2f4066;margin-bottom:12px}
+.cc-hearts{display:flex;flex-wrap:wrap;gap:6px}
+.cc-heart{font-size:10.5px;padding:4px 8px;border-radius:12px;
+  background:#0e1728;border:1px solid #1d2c48;color:#4a5a72}
+.cc-heart.on{color:#ffd08a;border-color:#6b4a24;background:#1a140a}
+
 </style>
 </head>
 <body>
@@ -373,6 +437,8 @@ const COL_DATA = {
 
 const CHARS = {
   lu:{ id:'lu', name:'陆则衍', title:'建筑设计院主创', diff:'easy', color:'#7fb8e8',
+       img:'img/lu.jpg', portrait:'img/lu_big.jpg',
+       bio:'建筑设计院主创。话很少，习惯把情绪画进图纸里。总在凌晨一点出现，点一杯冰美式。',
        firstDay:1, appearRate:0.8,
        hintEarly:'话很少，总是低头看手机。',
        hintClose:'他喜欢等别人先开口。',
@@ -435,6 +501,8 @@ const CHARS = {
          gone:'他接了外地的项目，走得悄无声息。<br><br>凌晨一点的吧台前，再也没有穿白衬衫的人等冰美式。<br><br>你偶尔还是会多做一杯，放到天亮，再默默倒掉。'
        }},
   chen:{ id:'chen', name:'陈术', title:'夜间汽修店老板', diff:'easy', color:'#e8a87f',
+       img:'img/chen.jpg', portrait:'img/chen_big.jpg',
+       bio:'夜间汽修店老板。手上永远洗不掉的机油味，说话低沉，心比谁都软。凌晨来歇脚，一罐功能饮料能喝很久。',
        firstDay:3, appearRate:0.6,
        hintEarly:'话不多，手上总有油。',
        hintClose:'他吃软不吃硬。',
@@ -497,6 +565,8 @@ const CHARS = {
          gone:'汽修铺转租了，门口再也没停过那辆旧越野。<br><br>深夜听到引擎声，你还是会下意识抬头。<br><br>帘子掀开，进来的永远是陌生人。'
        }},
   su:{ id:'su', name:'苏妄', title:'悬疑推理作家', diff:'hard', color:'#b89fe8',
+       img:'img/su.jpg', portrait:'img/su_big.jpg',
+       bio:'悬疑推理作家。帽檐压得很低，声音很轻。卡文的夜里，他会坐在靠窗那桌，写到天亮。',
        firstDay:5, appearRate:0.55,
        hintEarly:'帽檐压得很低。',
        hintClose:'别打扰他，就是最好的照顾。',
@@ -559,6 +629,8 @@ const CHARS = {
          gone:'他搬去了别的城市，靠窗的位置再也没人坐一下午。<br><br>收拾货架时你翻出半本他落下的便签，最后一页只有一行字<br><br>「有些故事，停在深夜就好。」'
        }},
   lin:{ id:'lin', name:'林川', title:'急诊科主治医师', diff:'medium', color:'#8fe8c4',
+       img:'img/lin.jpg', portrait:'img/lin_big.jpg',
+       bio:'急诊科主治医师。白大褂、黑眼圈、永远温和的语气。他总记得给别人留一盏灯，却很少为自己留。',
        firstDay:2, appearRate:0.65,
        hintEarly:'总是很累的样子。',
        hintClose:'他习惯照顾别人，不习惯被照顾。',
@@ -772,6 +844,7 @@ function collectionStats(){
 
 function renderCollection(showNew){
   const box = $('#modalBox');
+  box.classList.add('col-mode');
   const nu = showNew ? (S.newUnlocks || {hearts:{},rare:{},endings:{},events:{},yuHearts:{}}) : null;
   const cls = (base, isNew) => base + (isNew ? ' is-new' : '');
   let html = `<div class="m-title">回 忆 册</div>`;
@@ -816,7 +889,7 @@ function renderCollection(showNew){
     html += `</div></div>`;
   });
 
-  html += `<div class="col-section"><div class="col-sec-title">${COL_DATA.yu.name}（隐藏）</div><div class="col-grid">`;
+  html += `<div class="col-section yu-section"><div class="col-sec-title">${COL_DATA.yu.name}（隐藏）</div><div class="col-grid">`;
   COL_DATA.yu.hearts.forEach((name,i)=>{
     const ok = COL.yuHearts[i];
     const isNew = nu && nu.yuHearts[i];
@@ -853,7 +926,48 @@ function renderCollection(showNew){
 
   html += `<button class="m-btn" id="colClose" style="margin-top:8px">返回</button>`;
   box.innerHTML = html;
-  box.querySelector('#colClose').onclick = ()=>{ $('#modal').classList.remove('on'); };
+  box.querySelector('#colClose').onclick = ()=>{ $('#modal').classList.remove('on'); box.classList.remove('col-mode'); };
+  $('#modal').classList.add('on');
+}
+
+/* 点头像 → 人物大卡（立绘 + 简介 + 心事收集） */
+function openCharCard(id){
+  const c = CHARS[id];
+  if(!c) return;
+  const meta = COL_DATA.chars.filter(x=>x.id===id)[0];
+  const names = meta ? meta.hearts : [];
+  const heartsHtml = names.map((n,i)=>{
+    const ok = COL.hearts[id] && COL.hearts[id][i];
+    return '<span class="cc-heart ' + (ok?'on':'') + '">'
+         + (ok ? '💭 ' + n : '❔ 心事 ' + (i+1)) + '</span>';
+  }).join('');
+  const f = S.favors[id] || 0;
+  const box = $('#modalBox');
+  box.classList.add('cc-mode');
+  box.innerHTML =
+      '<div class="char-card">'
+    +   '<button class="cc-close" id="ccClose">×</button>'
+    +   '<div class="cc-portrait" style="background:linear-gradient(180deg,'
+    +     c.color + '22,transparent)">'
+    +     (c.portrait ? '<img src="' + c.portrait + '" alt="' + c.name + '">' : '<div class="cc-ph">' + c.name + '</div>')
+    +   '</div>'
+    +   '<div class="cc-info">'
+    +     '<div class="cc-name" style="color:' + c.color + '">' + c.name + '</div>'
+    +     '<div class="cc-title">' + c.title + '</div>'
+    +     '<div class="cc-tier" style="color:' + tierColor(f) + '">'
+    +       tierOf(f) + ' · 好感 ' + f + '</div>'
+    +     '<div class="cc-bio">' + (c.bio || '——') + '</div>'
+    +     '<div class="cc-hearts">' + heartsHtml + '</div>'
+    +   '</div>'
+    + '</div>';
+  const close = ()=>{
+    $('#modal').classList.remove('on');
+    $('#modal').onclick = null;
+    box.classList.remove('cc-mode');
+    box.innerHTML = '';
+  };
+  box.querySelector('#ccClose').onclick = close;
+  $('#modal').onclick = function(e){ if(e.target.id === 'modal') close(); };
   $('#modal').classList.add('on');
 }
 
@@ -1029,7 +1143,9 @@ function renderNight(){
     const card = el('div','guest');
     card.innerHTML = `
       <div class="g-top">
-        <div class="avatar" style="background:${c.color}">${c.name[0]}</div>
+        <div class="avatar" style="background:${c.color}" data-char="${id}">
+          ${c.img?`<img src="${c.img}" alt="${c.name}">`:c.name[0]}
+        </div>
         <div><div class="g-name">${c.name}</div><div class="g-title">${c.title}</div></div>
         <div class="g-favor">
           <div class="g-tier" style="color:${tierColor(f)}">${tierOf(f)}</div>
@@ -1047,6 +1163,9 @@ function renderNight(){
   });
   ga.querySelectorAll('button[data-id]').forEach(b=>{
     b.onclick = ()=>openDialog(b.dataset.id, b.dataset.type);
+  });
+  ga.querySelectorAll('.avatar[data-char]').forEach(av=>{
+    av.onclick = ()=>openCharCard(av.dataset.char);
   });
   renderActions();
   renderHUD();
