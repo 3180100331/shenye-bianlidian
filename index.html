@@ -32,8 +32,17 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
 .t-btn.primary{background:linear-gradient(135deg,rgba(74,53,26,.94),rgba(120,82,38,.94));
   color:#ffd9a2;border-color:#a87a3c;font-weight:600;
   box-shadow:0 4px 20px rgba(255,190,110,.22)}
+/* 回忆册 / 玩法并排，省一行高度，也给「玩法」一个常驻入口 */
+.t-row{display:flex;gap:10px;width:100%;max-width:260px}
+.t-row .t-btn{max-width:none;width:auto;flex:1;min-width:0;letter-spacing:1px;padding:14px 8px}
 .t-hint{font-size:11px;color:#b8c6d8;margin-top:16px;text-align:center;line-height:1.7;
   text-shadow:0 1px 4px rgba(0,0,0,.85)}
+/* ================= 玩法页 ================= */
+.howto-list{display:flex;flex-direction:column;gap:14px;margin:12px 0 18px}
+.howto-item{display:flex;gap:10px;align-items:flex-start}
+.howto-no{flex:0 0 19px;height:19px;line-height:18px;text-align:center;margin-top:1px;
+  font-size:11px;color:#a08a5c;border:1px solid #3a3050;border-radius:5px}
+.howto-d{font-size:12.5px;color:#b6c4d8;line-height:1.85}
 #hud{flex:none;background:#070c16;border-bottom:1px solid #16213a;padding:8px 12px;
   font-size:11.5px;color:#7f8fa8;line-height:1.8}
 #hud .row{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
@@ -304,7 +313,10 @@ body{font-family:"PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sa
     <div class="t-sub">A NIGHT SHIFT</div>
     <button class="t-btn primary" id="btnStart">开始新的一天</button>
     <button class="t-btn" id="btnRestart" style="display:none">重新开始</button>
-    <button class="t-btn" id="btnCollection">回 忆 册</button>
+    <div class="t-row">
+      <button class="t-btn" id="btnCollection">回 忆 册</button>
+      <button class="t-btn" id="btnRule">玩法提示</button>
+    </div>
     <div class="t-hint" id="tHint"></div>
   </div>
   <header id="hud"></header>
@@ -2293,6 +2305,34 @@ function showEnding(type, charId, otherId, next){
   $('#modal').classList.add('on');
 }
 
+/* 玩法页：只讲规则不讲数值。营收/整洁的判定一律用「标准」表述，
+   不写 100%/65/5AP——玩家要知道的是该看什么，不是背公式。
+   五条文案为定稿，逐字使用，不在此处改写。 */
+const HOWTO = [
+  '每晚只有定量的行动点（AP值）。补货、整理、互动、搭话都需要消耗行动点，用完之后无法行动只能打烊。',
+  '互动消耗2点AP，搭话消耗1点AP，选择会增加不同的营业额，而选项的正确程度会影响顾客的好感度。',
+  '打烊时会先扣当晚消耗，再判定营业标准。只有营业额和整洁度都达到标准才算合格夜。',
+  '货架与整洁度每晚都会掉，货架空着会导致营业额降低，整洁度太低直接会导致当天营业不合格。',
+  '连续几晚不达标，会得到店长的警告；持续不合格会导致直接闭店，游戏结束。'
+];
+function showHowto(){
+  const box = $('#modalBox');
+  box.classList.remove('col-mode','cc-mode');
+  box.innerHTML = `
+    <div class="m-title" style="text-align:center;letter-spacing:3px">玩法提示</div>
+    <div class="howto-list">${HOWTO.map((x,i)=>`
+      <div class="howto-item">
+        <div class="howto-no">${i+1}</div>
+        <div class="howto-d">${x}</div>
+      </div>`).join('')}</div>
+    <button class="m-btn" id="mHowtoOk">知道了</button>`;
+  box.querySelector('#mHowtoOk').onclick = ()=>{
+    $('#modal').classList.remove('on');
+    box.innerHTML = '';
+  };
+  $('#modal').classList.add('on');
+}
+
 function savedGameExists(){
   try { return !!localStorage.getItem(SAVE_KEY); } catch(e){ return false; }
 }
@@ -2368,6 +2408,7 @@ function start(){
   $('#btnStart').onclick = ()=> savedGameExists() ? resumeGame() : newGame();
   $('#btnRestart').onclick = ()=> confirmRestart();
   $('#btnCollection').onclick = ()=> renderCollection(false);
+  $('#btnRule').onclick = ()=> showHowto();
 
   if(!load()) clearSave();   // 坏档直接丢掉，不要让「继续」进到空局
   showTitle();
