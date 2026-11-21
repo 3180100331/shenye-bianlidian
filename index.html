@@ -469,13 +469,46 @@ const FRIEND_GATE = { favor:50, qualified:15 };
 const AFTERGLOW   = 75;
 const FAMILIAR_FAVOR = 56;
 
-const YU_REP_GATE   = 75;
-const YU_SVC_GATE   = 70;
 const YU_QUALIFIED  = 15;
 const YU_LIN_HEART  = 2;
 const YU_SCORE_LOVER = 19;
 const YU_SCORE_FRIEND = 16;
 const YU_GATE = 7;
+
+/* ---------- 经营结局（第 30 夜，接在关系结局之后）----------
+   三项共同判定：口碑 rep / 服务 service / A 级夜 aNights。
+   门槛按 200 局 × 三种操作水平的模拟分布设定（门槛只影响这张附加卡，
+   不参与恋人判定——LOVER_GATE 一个字没动）：
+     高手（选项几乎全对）  甲 81.5% · 乙 18.5%
+     一般（七成选对）      乙 90.0% · 丙 10.0%
+     新手（半数选对）      乙 19.7% · 丙 80.3% */
+const SHOP_GATES = {
+  a: { rep:95, svc:82, aNights:14 },
+  b: { rep:85, svc:75, aNights:5 }
+};
+/* HUD 上的 ✦：够到招牌店门槛才亮。原来这两个值挂在 75/70 上，
+   亮起来背后却没有任何东西在等着，等于骗玩家。 */
+const SHOP_REP_STAR = SHOP_GATES.a.rep;
+const SHOP_SVC_STAR = SHOP_GATES.a.svc;
+
+/* 经营结局文案：正文与回忆册共用这一份，改一处两处同步 */
+const SHOP_ENDINGS = {
+  a: { label:'SHOP · 招牌', name:'这条街的招牌', sub:'这家店成为了这条街的招牌',
+       title:'这条街的招牌',
+       body:'三十个夜晚缓缓流转，卷帘门每到晚上十点便准时拉起，暖黄灯光漫上街沿。<br><br>账本上的数字稳定舒展，货架永远满满当当，地砖被反复擦拭，清晰映出头顶悬着的顶灯。<br><br>那张写着你名字的排班纸早已泛黄，边角被胶带反复修补，像一枚刻在这家小店上的印记。' },
+  b: { label:'SHOP · 还开着', name:'这家店还开着', sub:'没有更好，也没有更坏',
+       title:'这家店还开着',
+       body:'三十个夜晚过去，店还开着。<br><br>营业额不算好看，也没到要被谈话的地步。<br><br>熟客还是会来，只是来的人永远零零散散。<br><br>拉下卷帘门的时候你会想，明天大概也差不多。' },
+  c: { label:'SHOP · 勉强', name:'勉强撑着的灯', sub:'还没到关店那天',
+       title:'勉强撑着的灯',
+       body:'三十个夜晚过去，灯还亮着，只是亮得没什么底气。<br><br>货架空的时候比满的时候多，你已经知道补了也卖不完。<br><br>还有人记得这里深夜开着门，但想不起上一次进来是什么时候。<br><br>你数了数抽屉里的现金，够撑到下个月。下个月之后的事，先不去想。' }
+};
+function shopEndingType(){
+  const a = SHOP_GATES.a, b = SHOP_GATES.b;
+  if(S.rep >= a.rep && S.service >= a.svc && S.aNights >= a.aNights) return 'shop_a';
+  if(S.rep >= b.rep && S.service >= b.svc && S.aNights >= b.aNights) return 'shop_b';
+  return 'shop_c';
+}
 
 /* 林屿探索流：层 0（查看次数）→ 层 1（见到不可攻略）→ 层 2（可攻略）→ 层 3（坦白） */
 const YU_LOOK_GATE   = 3;     // 查看次数门槛
@@ -872,7 +905,7 @@ function initState(){
   S.lastSeen = {}; S.dialogIdx = {}; S.heartQueue = {};
   S.present = [];
   S.night = { manage:0, special:0, general:0, rec:0 };
-  S.week  = { rec:0, general:0 };
+  S.week  = { rec:0, general:0, qual:0 };
   S.qualified = 0;
   S.aNights = 0;
   S.failStreak = 0;
@@ -960,7 +993,7 @@ function recordEnding(type, charId){
   const isNew = !COL.endings[key];
   COL.endings[key] = true; saveCollection();
   // 只有会出现在回忆册里的结局才标「新」；closed / none 无对应格子
-  if(isNew && (charId || type.indexOf('yu_') === 0)) markNew('endings', key);
+  if(isNew && (charId || type.indexOf('yu_') === 0 || type.indexOf('shop_') === 0)) markNew('endings', key);
 }
 
 function collectionStats(){
@@ -973,6 +1006,7 @@ function collectionStats(){
   COL_DATA.yu.hearts.forEach((_,i)=>{ total++; if(COL.yuHearts[i]) got++; });
   Object.keys(COL_DATA.yu.endings).forEach(k=>{ total++; if(COL.endings['yu_'+k]) got++; });
   COL_DATA.events.forEach(e=>{ total++; if(COL.events[e.id]) got++; });
+  Object.keys(SHOP_ENDINGS).forEach(k=>{ total++; if(COL.endings['shop_'+k]) got++; });
   return { total, got };
 }
 
@@ -1047,6 +1081,21 @@ function renderCollection(showNew){
   });
   html += `</div></div>`;
 
+  /* 经营结局：第 30 夜按口碑/服务/A 级夜判定的三档，和人物结局分开收 */
+  html += `<div class="col-section"><div class="col-sec-title">经营结局</div><div class="col-grid">`;
+  const shopIcons = { a:'🏮', b:'🔑', c:'🕯' };
+  Object.keys(SHOP_ENDINGS).forEach(k=>{
+    const key = 'shop_'+k;
+    const ok = COL.endings[key];
+    const isNew = nu && nu.endings[key];
+    html += `<div class="${cls('col-item '+(ok?'unlocked':'locked'), isNew)}"${ok?' data-k="end:shop:'+k+'"':''}>
+      <div class="col-icon">${ok?shopIcons[k]:'❔'}</div>
+      <div class="col-name">${ok?SHOP_ENDINGS[k].name:'？？？'}</div>
+      <div class="col-tip">结局·经营${isNew?' · 新':''}</div>
+    </div>`;
+  });
+  html += `</div></div>`;
+
   html += `<div class="col-section"><div class="col-sec-title">深夜事件</div><div class="col-grid">`;
   COL_DATA.events.forEach(e=>{
     const ok = COL.events[e.id];
@@ -1076,10 +1125,19 @@ function renderCollection(showNew){
 /* 回忆册 · 详情：结局正文与心事全文都从游戏数据里取，不另存一份副本 */
 function openColDetail(kind, id, key){
   const isYu = id === 'yu';
-  const meta = isYu ? COL_DATA.yu : COL_DATA.chars.filter(x=>x.id === id)[0];
-  if(!meta) return;
+  const isShop = id === 'shop';
+  const meta = isShop ? null : (isYu ? COL_DATA.yu : COL_DATA.chars.filter(x=>x.id === id)[0]);
+  if(!isShop && !meta) return;
   let tag, title, sub, body, note = '';
-  if(kind === 'rare'){
+  if(isShop){
+    /* 经营结局：正文直接取 SHOP_ENDINGS，和结局卡同一份 */
+    const s = SHOP_ENDINGS[key];
+    if(!s) return;
+    tag   = '结 局 · 经 营';
+    title = s.name;
+    sub   = s.sub;
+    body  = s.body;
+  }else if(kind === 'rare'){
     /* 稀有事件：格子显示短标签，正文取 CHARS[x].rare，和心事同一套「短标签 + 全文」 */
     if(!meta.rare) return;
     if(!CHARS[id] || !CHARS[id].rare) return;
@@ -1211,7 +1269,8 @@ function load(){
     if(!d.heartQueue) d.heartQueue = {};
     if(!d.favors) d.favors = {};
     if(!d.night) d.night = { manage:0, special:0, general:0, rec:0 };
-    if(!d.week) d.week = { rec:0, general:0 };
+    if(!d.week) d.week = { rec:0, general:0, qual:0 };
+    if(d.week.qual === undefined) d.week.qual = 0;   // 旧档补字段
     if(d.yuHearts === undefined) d.yuHearts = 0;
     if(!d.yuHeartQueue) d.yuHeartQueue = [];
     if(d.yuShown === undefined) d.yuShown = false;
@@ -1280,9 +1339,9 @@ function renderHUD(){
       <span class="sep">|</span>
       <span style="color:${stockCls}">货架 <b style="color:${stockCls}">${S.stock}</b></span>
       <span class="sep">|</span>
-      <span>口碑 <b>${S.rep}</b>${S.rep>=YU_REP_GATE?' <span style="color:#8fd6a8">✦</span>':''}</span>
+      <span>口碑 <b>${S.rep}</b>${S.rep>=SHOP_REP_STAR?' <span style="color:#8fd6a8" title="够到招牌店门槛">✦</span>':''}</span>
       <span class="sep">|</span>
-      <span>服务 <b>${S.service}</b>${S.service>=YU_SVC_GATE?' <span style="color:#8fd6a8">✦</span>':''}</span>
+      <span>服务 <b>${S.service}</b>${S.service>=SHOP_SVC_STAR?' <span style="color:#8fd6a8" title="够到招牌店门槛">✦</span>':''}</span>
     </div>`;
   const hx = $('#hudExit');
   if(hx) hx.onclick = quitToTitle;
@@ -2052,6 +2111,8 @@ function doSettlement(){
   if(passed) S.qualified++;
   if(gradeA) S.aNights++;
   S.nightHistory.push(passed);
+  /* 本周合格夜数：口碑的发放依据（以前按熟客数给，实际每周只拿 3–5，值域挤在 85–91） */
+  if(S.week) S.week.qual = (S.week.qual || 0) + (passed ? 1 : 0);
 
   let blackoutBonusHtml = '';
   if(S.blackout && passed){
@@ -2087,12 +2148,15 @@ function doSettlement(){
   let weekHtml = '';
   if(S.day===7 || S.day===14 || S.day===21 || S.day===28){
     const regulars = CHAR_IDS.filter(id => S.favors[id] >= 36).length;
-    const repUp = clamp(regulars * 2, 3, 15);
-    const svcUp = clamp(Math.round(S.week.rec + S.week.general * 0.5), 2, 12);
+    /* 口碑 = 熟客数（社交面）+ 本周合格夜（经营面）。上限从 15 压到 8：
+       旧公式每周实际只发 3–5，30 夜后人人挤在 85–91，判不出差别。 */
+    const repUp = clamp(regulars * 2 + Math.round((S.week.qual || 0) * 0.6), 2, 8);
+    /* 服务上限从 12 压到 5。旧公式每周必打满，第 30 夜恒为 100。 */
+    const svcUp = clamp(Math.round((S.week.rec + S.week.general * 0.5) / 2), 1, 5);
     S.rep     = clamp(S.rep + repUp, 0, 100);
     S.service = clamp(S.service + svcUp, 0, 100);
     weekHtml = `<div class="notice gold">周结算：口碑 +${repUp} → ${S.rep}｜服务 +${svcUp} → ${S.service}</div>`;
-    S.week = { rec:0, general:0 };
+    S.week = { rec:0, general:0, qual:0 };
   }
 
   S.present.forEach(id => S.lastSeen[id] = S.day);
@@ -2216,7 +2280,7 @@ function showConfession(){
   }
   const none = el('button','opt','谁都不选，就这样打烊');
   none.style.color = '#6d80a0';
-  none.onclick = ()=> showEnding('none');
+  none.onclick = ()=> showEnding('none', null, null, ()=> showEnding(shopEndingType()));
   ow.appendChild(none);
   $('#modal').classList.add('on');
 }
@@ -2242,12 +2306,12 @@ function finalEnding(id){
       .sort((a,b) => S.favors[b] - S.favors[a]);
     if(left.length){
       const b = left[0];
-      showEnding(type, id, null, ()=> showEnding('gone', b, null));
+      showEnding(type, id, null, ()=> showEnding('gone', b, null, ()=> showEnding(shopEndingType())));
       return;
     }
   }
   const other = CHAR_IDS.find(o => o !== id && S.favors[o] >= AFTERGLOW);
-  showEnding(type, id, other);
+  showEnding(type, id, other, ()=> showEnding(shopEndingType()));
 }
 function finalYuEnding(){
   /* 「全被动 0%」用显式条件，不用分数门槛：
@@ -2265,7 +2329,7 @@ function finalYuEnding(){
   }else{
     type = 'yu_gone';
   }
-  showEnding(type);
+  showEnding(type, null, null, ()=> showEnding(shopEndingType()));
 }
 function showEnding(type, charId, otherId, next){
   clearSave();
@@ -2279,8 +2343,17 @@ function showEnding(type, charId, otherId, next){
     lover:'成为恋人', friend:'成为好友', gone:'不再相遇', closed:'店铺关门', none:'谁都没选',
     yu_lover:'成为恋人', yu_friend:'成为好友', yu_gone:'不再相遇'
   };
+  /* 经营结局：标签与副题都从 SHOP_ENDINGS 取，不在这里重复写一遍文案 */
+  const shopKey = type.indexOf('shop_') === 0 ? type.slice(5) : null;
+  if(shopKey && SHOP_ENDINGS[shopKey]){
+    labelMap[type] = SHOP_ENDINGS[shopKey].label;
+    nameMap[type]  = SHOP_ENDINGS[shopKey].sub;
+  }
   let title = '', body = '', after = '';
-  if(type === 'closed'){
+  if(shopKey && SHOP_ENDINGS[shopKey]){
+    title = SHOP_ENDINGS[shopKey].name;
+    body  = SHOP_ENDINGS[shopKey].body;
+  }else if(type === 'closed'){
     title = '店铺关门了';
     body  = '连续四晚不达标。店长收回了钥匙。<br><br>你站在拉下的卷帘门外，雨还没停。玻璃上倒映着店里的灯，一盏接一盏暗下去，<br><br>像那些没说出口的心事，全都沉进了深夜里。';
   }else if(type === 'none'){
@@ -2307,7 +2380,7 @@ function showEnding(type, charId, otherId, next){
     : '<button class="m-btn" id="mCol" style="background:#131d30;border-color:#1d2c48;color:#9fb2cc">回忆册</button>'
     + '<button class="m-btn" id="mEnd">重新开始</button>';
   const box = $('#modalBox');
-  const beCls = /gone|closed/.test(type) ? ' be' : '';
+  const beCls = /gone|closed|shop_c/.test(type) ? ' be' : '';
   box.innerHTML = `
     <div class="end-box${beCls}">
       <div class="end-label">${labelMap[type]}</div>
