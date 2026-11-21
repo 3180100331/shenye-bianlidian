@@ -489,6 +489,30 @@ const DRUNK_SOFT_BONUS = 2;
 const SAVE_KEY       = 'deepnight.save.v8';
 const COLLECTION_KEY = 'deepnight.collection.v1';
 
+/* 存储层。有些环境会禁用 localStorage（预览面板的 about:srcdoc 内嵌页、
+   隐私模式、origin 为 null 的情况），直接调用会抛错，写进去也读不回来。
+   统一走这层封装：能持久化就写盘，不能就退到内存——至少本次打开期间
+   「退出 → 继续」不会丢档，同时用 persistent 标记让标题页如实提示。 */
+const STORE = (function(){
+  let mem = {};
+  let ok = false;
+  try {
+    const probe = '__deepnight_probe__';
+    localStorage.setItem(probe, '1');
+    ok = localStorage.getItem(probe) === '1';
+    localStorage.removeItem(probe);
+  } catch(e){ ok = false; }
+  return {
+    persistent: ok,
+    get(k){
+      if(ok){ try { const v = localStorage.getItem(k); if(v !== null) return v; } catch(e){} }
+      return Object.prototype.hasOwnProperty.call(mem, k) ? mem[k] : null;
+    },
+    set(k, v){ mem[k] = v; if(ok){ try { localStorage.setItem(k, v); } catch(e){} } },
+    del(k){ delete mem[k]; if(ok){ try { localStorage.removeItem(k); } catch(e){} } }
+  };
+})();
+
 function revenueTarget(day){
   if(day<=10) return 1000;
   if(day<=20) return 1500;
@@ -892,7 +916,7 @@ function initState(){
 let COL = {};
 function loadCollection(){
   try {
-    const raw = localStorage.getItem(COLLECTION_KEY);
+    const raw = STORE.get(COLLECTION_KEY);
     COL = raw ? JSON.parse(raw) : {};
   } catch(e){ COL = {}; }
   if(!COL.hearts) COL.hearts = {};
@@ -902,7 +926,7 @@ function loadCollection(){
   if(!COL.yuHearts) COL.yuHearts = {};
 }
 function saveCollection(){
-  try { localStorage.setItem(COLLECTION_KEY, JSON.stringify(COL)); } catch(e){}
+  try { STORE.set(COLLECTION_KEY, JSON.stringify(COL)); } catch(e){}
 }
 function markNew(kind, key){
   if(!S.newUnlocks) return;
@@ -1175,11 +1199,11 @@ function save(){
     pendingPhoto:S.pendingPhoto, photoDone:S.photoDone, yuInNight:S.yuInNight,
     yuShown:S.yuShown, newUnlocks:S.newUnlocks
   };
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch(e){}
+  try { STORE.set(SAVE_KEY, JSON.stringify(data)); } catch(e){}
 }
 function load(){
   try {
-    const raw = localStorage.getItem(SAVE_KEY);
+    const raw = STORE.get(SAVE_KEY);
     if(!raw) return false;
     const d = JSON.parse(raw);
     if(!d.hearts) d.hearts = {};
@@ -1212,7 +1236,7 @@ function load(){
   } catch(e){ return false; }
 }
 function clearSave(){
-  try { localStorage.removeItem(SAVE_KEY); } catch(e){}
+  try { STORE.del(SAVE_KEY); } catch(e){}
 }
 
 function rollWeatherAndEvents(){
@@ -2334,7 +2358,7 @@ function showHowto(){
 }
 
 function savedGameExists(){
-  try { return !!localStorage.getItem(SAVE_KEY); } catch(e){ return false; }
+  return !!STORE.get(SAVE_KEY);
 }
 function showTitle(){
   $('#titleScreen').classList.add('on');
@@ -2346,7 +2370,8 @@ function showTitle(){
   $('#btnRestart').style.display = has ? '' : 'none';
   const st = collectionStats();
   $('#tHint').innerHTML = (has ? `存档停在第 ${S.day} 夜<br>` : '')
-    + `回忆册：${st.got} / ${st.total}<br>每一个深夜，都值得被记住。`;
+    + `回忆册：${st.got} / ${st.total}<br>每一个深夜，都值得被记住。`
+    + (STORE.persistent ? '' : '<br><span style="color:#c99a52">当前环境不支持存档，重开后进度不会保留</span>');
 }
 /* 存档并退出：随时可点，存档点在每次操作后已自动写入，这里再落一次盘 */
 function quitToTitle(){
